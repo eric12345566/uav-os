@@ -1,13 +1,30 @@
-import time
-import cv2 as cv
+from State.OSStateEnum import OSState
+from djitellopy import Tello
 
 
-def controllerProcess(text, share):
-    time.sleep(3)
+def controllerProcess(telloFrameShared, stateService):
+    """ init Tello object
+    """
+    tello = Tello()
+    tello.connect()
+
+    """ stream
+    """
+    tello.streamoff()
+    tello.streamon()
+
+    telloFrameObj = tello.get_frame_read()
+    telloFrames = telloFrameObj.frame
+    telloFrameShared.set(telloFrames)
+
+    # Ready To Go
+    stateService.setState(OSState.READY)
+    print("TELLO is : ", stateService.getCurrentState())
+
     while True:
-        frame = share.get()
-        cv.imshow('ctr', frame)
-        if cv.waitKey(1) & 0xFF == ord('q'):
-            break
+        telloFrames = telloFrameObj.frame
+        telloFrameShared.set(telloFrames)
 
-    cv.destroyAllWindows()
+
+def controllerProcessDummy():
+    print("telloStart")

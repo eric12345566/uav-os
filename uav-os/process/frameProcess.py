@@ -1,16 +1,21 @@
-import time
 import cv2 as cv
+from State.OSStateEnum import OSState
 
 
-def frameProcess(share):
-    cap = cv.VideoCapture(0)
+def frameProcess(shareFrame, stateService):
+    # cap = cv.VideoCapture(0)
+    print("frameProcess: Start")
+    print("state: ", stateService.getCurrentState())
 
     while True:
-        ret, frame = cap.read()
-        share.set(frame)
-        cv.imshow('frame', frame)
-        if cv.waitKey(1) & 0xFF == ord('q'):
-            break
+        if stateService.getCurrentState() != OSState.INITIALIZING:
+            # ret, frame = cap.read()
+            # share.set(frame)
+            frame = shareFrame.get()
+            cv.imshow('frame', frame)
+            if cv.waitKey(1) & 0xFF == ord('q'):
+                break
 
-    cap.release()
+    # cap.release()
     cv.destroyAllWindows()
+    print("frameProcess: End")
