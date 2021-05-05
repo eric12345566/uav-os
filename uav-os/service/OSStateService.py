@@ -8,9 +8,18 @@ class StateService(object):
         self.lock = mp.Lock()
 
     def setState(self, state):
+        """
+        直接設定State，目前為了方便才這樣寫，未來將會拋棄
+        :param state: OSState Enum 狀態
+        :return: void
+        """
         self.lock.acquire()
         self.State = state
         self.lock.release()
 
-    def getCurrentState(self):
+    def getCurrentState(self) -> OSState:
+        """
+        取得目前的 OS State
+        :return: OSState
+        """
         return self.State

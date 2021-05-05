@@ -1,8 +1,8 @@
 import multiprocessing as mp
 from multiprocessing.managers import BaseManager
 import time
-import process.controllerProcess as ctrp
-import process.frameProcess as fp
+import process.ControllerProcess as ctrp
+import process.FrameProcess as fp
 
 
 class SimpleClass(object):

@@ -3,15 +3,15 @@ from multiprocessing.managers import BaseManager
 import time
 
 # Process
-import process.controllerProcess as ctrp
-import process.frameProcess as fp
-import process.autoFlightProcess as afp
+import process.ControllerProcess as ctrp
+import process.FrameProcess as fp
+import process.AutoFlightProcess as afp
 
 # Class
 from classes.FrameClass import FrameClass
 
 # Service
-from service.stateService import StateService
+from service.OSStateService import StateService
 
 if __name__ == '__main__':
     # record started time
