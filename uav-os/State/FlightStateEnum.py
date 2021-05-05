@@ -3,5 +3,8 @@ from enum import Enum
 
 class FlightState(Enum):
     INIT_SYSTEM = 'init_system'
-    READY = 'ready'
-    RUNNING = 'running'
+    READY_FOR_CMD = 'ready_for_cmd'
+    INPUT_CMD = 'input_cmd'
+    RUNNING_CMD = 'running_cmd'
+    DONE = 'done'
+    ERROR = 'error'

@@ -7,15 +7,30 @@ def frameProcess(shareFrame, stateService):
     print("frameProcess: Start")
     print("state: ", stateService.getCurrentState())
 
+    initCapOneTime = False
     while True:
         if stateService.getCurrentState() != OSState.INITIALIZING:
-            # ret, frame = cap.read()
-            # share.set(frame)
-            frame = shareFrame.get()
+
+            if not initCapOneTime:
+                address = shareFrame.getAddress()
+                cap = cv.VideoCapture(address)
+                initCapOneTime = True
+
+            if not cap.isOpened():
+                print('VideoCapture not opened')
+                exit(-1)
+
+            ret, frame = cap.read()
+            shareFrame.setFrame(frame)
+
+            if not ret:
+                print('frame empty')
+                break
+
             cv.imshow('frame', frame)
             if cv.waitKey(1) & 0xFF == ord('q'):
                 break
 
-    # cap.release()
+    cap.release()
     cv.destroyAllWindows()
     print("frameProcess: End")

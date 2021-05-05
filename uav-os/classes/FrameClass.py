@@ -7,9 +7,16 @@
 class FrameClass(object):
     def __init__(self):
         self.frame = []
+        self.address = None
 
-    def set(self, frame):
+    def setFrame(self, frame):
         self.frame = frame
 
     def get(self):
         return self.frame
+
+    def setAddress(self, addr):
+        self.address = addr
+
+    def getAddress(self):
+        return self.address

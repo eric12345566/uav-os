@@ -13,17 +13,25 @@ def controllerProcess(telloFrameShared, stateService):
     tello.streamoff()
     tello.streamon()
 
-    telloFrameObj = tello.get_frame_read()
-    telloFrames = telloFrameObj.frame
-    telloFrameShared.set(telloFrames)
+    telloFrameShared.setAddress(tello.get_udp_video_address())
+
+    # telloFrames = telloFrameObj.frame
+    # telloFrameShared.set(telloFrames)
 
     # Ready To Go
     stateService.setState(OSState.READY)
     print("TELLO is : ", stateService.getCurrentState())
 
     while True:
-        telloFrames = telloFrameObj.frame
-        telloFrameShared.set(telloFrames)
+        # telloFrames = telloFrameObj.frame
+        # telloFrameShared.set(telloFrames)
+        pass
+
+
+def telloCmdRunner(cmdList):
+
+    for cmd in cmdList:
+        print("CMD: ", cmd)
 
 
 def controllerProcessDummy():
