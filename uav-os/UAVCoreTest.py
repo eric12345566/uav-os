@@ -26,8 +26,8 @@ if __name__ == '__main__':
 
     arr1 = manager.SimpleClass()
     # init
-    ctrProcess = mp.Process(target=ctrp.controllerProcess, args=('hello controller', arr1,))
-    frameProcess = mp.Process(target=fp.frameProcess, args=(arr1,))
+    ctrProcess = mp.Process(target=ctrp.ControllerProcess, args=('hello controller', arr1,))
+    frameProcess = mp.Process(target=fp.FrameProcess, args=(arr1,))
 
     ctrProcess.start()
     frameProcess.start()

@@ -2,10 +2,13 @@ from State.OSStateEnum import OSState
 import multiprocessing as mp
 
 
-class StateService(object):
+class OSStateService(object):
     def __init__(self):
         self.State = OSState.INITIALIZING
         self.lock = mp.Lock()
+
+        # mode: prod, dev, test
+        self.mode = "dev"
 
     def setState(self, state):
         """
@@ -23,3 +26,9 @@ class StateService(object):
         :return: OSState
         """
         return self.State
+
+    def setMode(self, mode):
+        self.mode = mode
+
+    def getMode(self):
+        return self.mode

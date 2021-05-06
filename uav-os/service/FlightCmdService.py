@@ -2,7 +2,7 @@ from State.FlightStateEnum import FlightState
 import multiprocessing as mp
 
 
-class flightCmdService(object):
+class FlightCmdService(object):
 
     def __init__(self):
         self.State = FlightState.INIT_SYSTEM

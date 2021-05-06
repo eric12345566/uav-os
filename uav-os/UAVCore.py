@@ -11,7 +11,8 @@ import process.AutoFlightProcess as afp
 from classes.FrameClass import FrameClass
 
 # Service
-from service.OSStateService import StateService
+from service.OSStateService import OSStateService
+from service.FlightCmdService import FlightCmdService
 
 if __name__ == '__main__':
     # record started time
@@ -21,24 +22,34 @@ if __name__ == '__main__':
     '''
     # 註冊共享類別
     BaseManager.register('frameClass', FrameClass)
-    BaseManager.register('stateService', StateService)
+    BaseManager.register('osStateService', OSStateService)
+    BaseManager.register('flightCmdService', FlightCmdService)
     manager = BaseManager()
     manager.start()
-    # lock = mp.Lock()
 
     '''共享資料
     '''
     # frameObj = manager.frameClass()
     telloFrame = manager.frameClass()
-    stateService = manager.stateService()
+    osStateService = manager.osStateService()
+    flightCmdService = manager.flightCmdService()
+
+    '''OS環境變數
+    '''
+    osStateService.setMode("test")
 
     ''' 執行緒創建
     '''
     # 創建執行緒
-    # afpProcess = mp.Process(target=afp.autoFlightProcess, args=(telloFrame, stateService))
-    ctrProcess = mp.Process(target=ctrp.controllerProcess, args=(telloFrame, stateService,))
-    # ctrProcess = mp.Process(target=ctrp.controllerProcessDummy, args=())
-    frameProcess = mp.Process(target=fp.frameProcess, args=(telloFrame, stateService, ))
+    afpProcess = mp.Process(target=afp.AutoFlightProcess, args=(telloFrame, osStateService, flightCmdService,))
+    frameProcess = mp.Process(target=fp.FrameProcess, args=(telloFrame, osStateService,))
+
+    if osStateService.getMode() != "test":
+        print("dev")
+        ctrProcess = mp.Process(target=ctrp.ControllerProcess, args=(telloFrame, osStateService, flightCmdService,))
+    else:
+        print("test")
+        ctrProcess = mp.Process(target=ctrp.controllerProcessDummy, args=(telloFrame, osStateService, flightCmdService,))
 
     # 開始執行緒
     # afpProcess.start()
