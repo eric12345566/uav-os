@@ -1,5 +1,7 @@
 import sys
 import logging
+import time
+
 
 class _AnsiColorizer(object):
     """
@@ -66,58 +68,16 @@ class ColorHandler(logging.StreamHandler):
         self.stream.write(record.msg + "\n", color)
 
 
-class LoggerService(object):
-    def __init__(self):
-        logging.getLogger().setLevel(logging.DEBUG)
-        logging.getLogger().addHandler(ColorHandler())
+logging.getLogger().setLevel(logging.DEBUG)
+FORMAT = '%(asctime)s %(levelname)s: %(message)s'
+logging.getLogger().addHandler(ColorHandler())
 
-        # TODO: Mode for log bound
-        self.Mode = "dev"
-        self.controllerProcessName = "CTRP"
-        self.autoFlightProcessName = "AFP"
-        self.frameProcessName = "FP"
+if __name__ == "__main__":
+    startTime = time.time()
+    logging.debug("[CTRP] <DEBUG>: Some debugging output ")
+    logging.info("[AFP] <INFO>: Some info output")
+    logging.error("[FP] <ERROR>: Some error output")
+    logging.warning("[FP] <WARNING>: Some warning output")
+    endTime = time.time()
 
-    """ Normal Debug
-    """
-    def ctrp_debug(self, logString):
-        logging.debug("[" + self.controllerProcessName + "] <DEBUG>: " + logString)
-
-    def afp_debug(self, logString):
-        logging.debug("[" + self.autoFlightProcessName + "] <DEBUG>: " + logString)
-
-    def fp_debug(self, logString):
-        logging.debug("[" + self.frameProcessName + "] <DEBUG>: " + logString)
-
-    """ Info
-    """
-
-    def ctrp_info(self, logString):
-        logging.info("[" + self.controllerProcessName + "] <INFO>: " + logString)
-
-    def afp_info(self, logString):
-        logging.info("[" + self.autoFlightProcessName + "] <INFO>: " + logString)
-
-    def fp_info(self, logString):
-        logging.info("[" + self.frameProcessName + "] <INFO>:" + logString)
-
-    """ Error Log
-    """
-    def ctrp_error(self, logString):
-        logging.error("[" + self.controllerProcessName + "] <ERROR>: " + logString)
-
-    def afp_error(self, logString):
-        logging.error("[" + self.autoFlightProcessName + "] <ERROR>: " + logString)
-
-    def fp_error(self, logString):
-        logging.error("[" + self.frameProcessName + "] <ERROR>: " + logString)
-
-    """ Warning Log
-    """
-    def ctrp_warning(self, logString):
-        logging.error("[" + self.controllerProcessName + "] <WARNING>: " + logString)
-
-    def afp_warning(self, logString):
-        logging.error("[" + self.autoFlightProcessName + "] <WARNING>: " + logString)
-
-    def fp_warning(self, logString):
-        logging.error("[" + self.frameProcessName + "] <WARNING>: " + logString)
+    logging.info("elapsed time: " + str(endTime-startTime))

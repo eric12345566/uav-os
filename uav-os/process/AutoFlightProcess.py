@@ -3,8 +3,10 @@ import cv2 as cv
 from State.OSStateEnum import OSState
 from State.FlightStateEnum import FlightState
 from State.CmdEnum import CmdEnum
+from service.LoggerService import LoggerService
 
 cmdList = []
+logger = LoggerService()
 
 
 def cmdListAdd(cmd, value):
@@ -17,18 +19,17 @@ def cmdListClear():
 
 def cmdUAVRun(FlightCmdService):
     if FlightCmdService.currentState() == FlightState.READY_FOR_CMD:
-        print("AUTO: turn to Input_mode")
+        logger.afp_debug("turn to Input_mode")
         FlightCmdService.registerInputCmdProcess("autoP")
         FlightCmdService.cmdListAssign(cmdList)
         FlightCmdService.startRunCmd()
     if FlightCmdService.currentState() == FlightState.DONE:
-        print("AutoFlight Stop")
+        logger.afp_debug("AutoFlight Stop")
         cmdListClear()
         return True
 
 
 def AutoFlightProcess(uavFrame, OSStateService, FlightCmdService):
-    print("AutoProcess Start")
     OSStateService.autoFlightInitReady()
 
     # while OSStateService.getCurrentState() != OSState.READY:
@@ -40,5 +41,5 @@ def AutoFlightProcess(uavFrame, OSStateService, FlightCmdService):
     cmdListAdd(CmdEnum.land, 0)
     while True:
         if cmdUAVRun(FlightCmdService):
-            print("AUTo Done")
+            logger.afp_debug("Done")
             break

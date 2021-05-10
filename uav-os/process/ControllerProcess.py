@@ -3,6 +3,7 @@ from State.OSStateEnum import OSState
 from djitellopy import Tello
 from State.FlightStateEnum import FlightState
 from State.CmdEnum import CmdEnum
+from service.LoggerService import LoggerService
 
 
 def ControllerProcess(telloFrameShared, OSStateService, FlightCmdService):
@@ -23,7 +24,6 @@ def ControllerProcess(telloFrameShared, OSStateService, FlightCmdService):
     # OSStateService.setState(OSState.READY)
     OSStateService.controllerInitReady()
     FlightCmdService.initDone()
-    flyOnce = True
     while True:
         if OSStateService.getCurrentState() != OSState.INITIALIZING:
             # print("Flight State: ", FlightCmdService.currentState())
@@ -35,14 +35,19 @@ def ControllerProcess(telloFrameShared, OSStateService, FlightCmdService):
                 pass
             elif FlightCmdService.currentState() == FlightState.INPUT_CMD:
                 # print("CtrProcess: wait for input cmd..")
+                """ INPUT_CMD
+                """
                 pass
             elif FlightCmdService.currentState() == FlightState.RUNNING_CMD:
                 # print("CtrProcess: running cmd..")
-                i = 0
+                """ RUNNING_CMD
+                """
                 telloCmdRunner(FlightCmdService.controller_GetCmdList(), tello)
                 FlightCmdService.controller_CmdDone()
             elif FlightCmdService.currentState() == FlightState.DONE:
                 # print("Done")
+                """ DONE
+                """
                 FlightCmdService.controller_StateBackToReady()
 
 

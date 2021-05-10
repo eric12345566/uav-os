@@ -1,10 +1,13 @@
 import cv2 as cv
 from State.OSStateEnum import OSState
+from service.LoggerService import LoggerService
 
 
 def FrameProcess(shareFrame, OSStateService):
+    logger = LoggerService()
+    logger.fp_debug("Start")
     # cap = cv.VideoCapture(0)
-    print("frameProcess: Start")
+
     # OSStateService.frameInitReady()
     if OSStateService.getMode() != 'test':
         initCapOneTime = False
@@ -18,14 +21,14 @@ def FrameProcess(shareFrame, OSStateService):
                     initCapOneTime = True
 
                 if not cap.isOpened():
-                    print('VideoCapture not opened')
+                    logger.fp_error("VideoCapture not opened")
                     exit(-1)
 
                 ret, frame = cap.read()
                 shareFrame.setFrame(frame)
 
                 if not ret:
-                    print('frame empty')
+                    logger.fp_error("frame empty")
                     break
 
                 cv.imshow('frame', frame)
@@ -34,8 +37,7 @@ def FrameProcess(shareFrame, OSStateService):
                 OSStateService.frameInitReady()
         cap.release()
         cv.destroyAllWindows()
-        print("frameProcess: End")
+        logger.fp_debug("End")
     else:
-        print("In Testing mode, Not open Frame")
-
+        logger.fp_debug("In Testing mode, Not open Frame")
 

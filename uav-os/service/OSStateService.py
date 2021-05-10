@@ -52,12 +52,18 @@ class OSStateService(object):
         self.__frameInitReady = True
         self.isOSInitReady()
 
+    def getFrameInitState(self):
+        return self.__frameInitReady
+
     def autoFlightInitReady(self):
         self.__autoFlightInitReady = True
         self.isOSInitReady()
 
+    def getAutoFlightInitState(self):
+        return self.__autoFlightInitReady
+
     """
-        開發 Mode 
+        Run Mode 
     """
     def setMode(self, mode):
         self.mode = mode
