@@ -17,42 +17,38 @@ def ControllerProcess(telloFrameShared, OSStateService, FlightCmdService):
     tello.streamoff()
     tello.streamon()
 
-    # shared stream UDP address
+    """ shared stream UDP address
+    """
     telloFrameShared.setAddress(tello.get_udp_video_address())
 
-    # Ready To Go
-    # OSStateService.setState(OSState.READY)
+    """ State Change
+    """
     OSStateService.controllerInitReady()
     FlightCmdService.initDone()
+
     while True:
         if OSStateService.getCurrentState() != OSState.INITIALIZING:
-            # print("Flight State: ", FlightCmdService.currentState())
-            # state: ready_for_cmd
             if FlightCmdService.currentState() == FlightState.READY_FOR_CMD:
                 """ READY_FOR_CMD
                 """
-                # print("CtrProcess: ready, ", FlightCmdService.currentState())
                 pass
             elif FlightCmdService.currentState() == FlightState.INPUT_CMD:
-                # print("CtrProcess: wait for input cmd..")
                 """ INPUT_CMD
                 """
                 pass
             elif FlightCmdService.currentState() == FlightState.RUNNING_CMD:
-                # print("CtrProcess: running cmd..")
                 """ RUNNING_CMD
                 """
-                telloCmdRunner(FlightCmdService.controller_GetCmdList(), tello)
+                telloCmdRunner(FlightCmdService.controller_GetFullCmdList(), tello)
                 FlightCmdService.controller_CmdDone()
             elif FlightCmdService.currentState() == FlightState.DONE:
-                # print("Done")
                 """ DONE
                 """
                 FlightCmdService.controller_StateBackToReady()
 
 
 def telloCmdRunner(cmdList, tello):
-    for cmd in cmdList:
+    for idx, cmd in enumerate(cmdList):
         if cmd['cmd'] == CmdEnum.takeoff:
             tello.takeoff()
         elif cmd['cmd'] == CmdEnum.move_forward:
@@ -87,7 +83,7 @@ def controllerProcessDummy(telloFrameShared, OSStateService, FlightCmdService):
             #     print("i: ", i)
             #     print(cmd)
             #     i += 1
-            telloCmdRunner(FlightCmdService.controller_GetCmdList())
+            telloCmdRunner(FlightCmdService.controller_GetFullCmdList())
             FlightCmdService.controller_CmdDone()
         elif FlightCmdService.currentState() == FlightState.DONE:
             print("Done")

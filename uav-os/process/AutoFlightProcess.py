@@ -20,9 +20,9 @@ def cmdListClear():
 def cmdUAVRun(FlightCmdService):
     if FlightCmdService.currentState() == FlightState.READY_FOR_CMD:
         logger.afp_debug("turn to Input_mode")
-        FlightCmdService.registerInputCmdProcess("autoP")
-        FlightCmdService.cmdListAssign(cmdList)
-        FlightCmdService.startRunCmd()
+        if FlightCmdService.registerInputCmdProcess("autoP"):
+            FlightCmdService.cmdListAssign(cmdList)
+            FlightCmdService.startRunCmd()
     if FlightCmdService.currentState() == FlightState.DONE:
         logger.afp_debug("AutoFlight Stop")
         cmdListClear()
