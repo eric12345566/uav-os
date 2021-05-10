@@ -1,5 +1,8 @@
+import time
 from State.OSStateEnum import OSState
 from djitellopy import Tello
+from State.FlightStateEnum import FlightState
+from State.CmdEnum import CmdEnum
 
 
 def ControllerProcess(telloFrameShared, OSStateService, FlightCmdService):
@@ -17,19 +20,71 @@ def ControllerProcess(telloFrameShared, OSStateService, FlightCmdService):
     telloFrameShared.setAddress(tello.get_udp_video_address())
 
     # Ready To Go
-    OSStateService.setState(OSState.READY)
-
+    # OSStateService.setState(OSState.READY)
+    OSStateService.controllerInitReady()
+    FlightCmdService.initDone()
+    flyOnce = True
     while True:
-        pass
+        if OSStateService.getCurrentState() != OSState.INITIALIZING:
+            # print("Flight State: ", FlightCmdService.currentState())
+            # state: ready_for_cmd
+            if FlightCmdService.currentState() == FlightState.READY_FOR_CMD:
+                """ READY_FOR_CMD
+                """
+                # print("CtrProcess: ready, ", FlightCmdService.currentState())
+                pass
+            elif FlightCmdService.currentState() == FlightState.INPUT_CMD:
+                # print("CtrProcess: wait for input cmd..")
+                pass
+            elif FlightCmdService.currentState() == FlightState.RUNNING_CMD:
+                # print("CtrProcess: running cmd..")
+                i = 0
+                telloCmdRunner(FlightCmdService.controller_GetCmdList(), tello)
+                FlightCmdService.controller_CmdDone()
+            elif FlightCmdService.currentState() == FlightState.DONE:
+                # print("Done")
+                FlightCmdService.controller_StateBackToReady()
 
 
-def telloCmdRunner(cmdList):
-
+def telloCmdRunner(cmdList, tello):
     for cmd in cmdList:
-        print("CMD: ", cmd)
+        if cmd['cmd'] == CmdEnum.takeoff:
+            tello.takeoff()
+        elif cmd['cmd'] == CmdEnum.move_forward:
+            tello.move_forward(cmd['value'])
+        elif cmd['cmd'] == CmdEnum.move_left:
+            tello.move_left(cmd['value'])
+        elif cmd['cmd'] == CmdEnum.move_right:
+            tello.move_right(cmd['value'])
+        elif cmd['cmd'] == CmdEnum.land:
+            tello.land()
 
 
 def controllerProcessDummy(telloFrameShared, OSStateService, FlightCmdService):
     print("Tello Fly")
 
+    # Controller Ready
+    OSStateService.setState(OSState.READY)
+    FlightCmdService.initDone()
 
+    while True:
+
+        # state: ready_for_cmd
+        if FlightCmdService.currentState() == FlightState.READY_FOR_CMD:
+            print("CtrProcess: ready, ", FlightCmdService.currentState())
+            pass
+        elif FlightCmdService.currentState() == FlightState.INPUT_CMD:
+            print("CtrProcess: wait for input cmd..")
+        elif FlightCmdService.currentState() == FlightState.RUNNING_CMD:
+            print("CtrProcess: running cmd..")
+            i = 0
+            # for cmd in FlightCmdService.controller_GetCmdList():
+            #     print("i: ", i)
+            #     print(cmd)
+            #     i += 1
+            telloCmdRunner(FlightCmdService.controller_GetCmdList())
+            FlightCmdService.controller_CmdDone()
+        elif FlightCmdService.currentState() == FlightState.DONE:
+            print("Done")
+            FlightCmdService.controller_StateBackToReady()
+            break

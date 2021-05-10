@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     '''OS環境變數
     '''
-    osStateService.setMode("test")
+    osStateService.setMode("dev")
 
     ''' 執行緒創建
     '''
@@ -52,12 +52,12 @@ if __name__ == '__main__':
         ctrProcess = mp.Process(target=ctrp.controllerProcessDummy, args=(telloFrame, osStateService, flightCmdService,))
 
     # 開始執行緒
-    # afpProcess.start()
+    afpProcess.start()
     frameProcess.start()
     ctrProcess.start()
 
     # 結束執行緒
-    # afpProcess.join()
+    afpProcess.join()
     frameProcess.join()
     ctrProcess.join()
 

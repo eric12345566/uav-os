@@ -5,12 +5,12 @@ from State.OSStateEnum import OSState
 def FrameProcess(shareFrame, OSStateService):
     # cap = cv.VideoCapture(0)
     print("frameProcess: Start")
-    print("state: ", OSStateService.getCurrentState())
-
+    # OSStateService.frameInitReady()
     if OSStateService.getMode() != 'test':
         initCapOneTime = False
         while True:
-            if OSStateService.getCurrentState() != OSState.INITIALIZING:
+            # print("ctr: ",OSStateService.getControllerInitState())
+            if OSStateService.getControllerInitState():
 
                 if not initCapOneTime:
                     address = shareFrame.getAddress()
@@ -31,6 +31,7 @@ def FrameProcess(shareFrame, OSStateService):
                 cv.imshow('frame', frame)
                 if cv.waitKey(1) & 0xFF == ord('q'):
                     break
+                OSStateService.frameInitReady()
         cap.release()
         cv.destroyAllWindows()
         print("frameProcess: End")
