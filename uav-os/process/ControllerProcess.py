@@ -41,11 +41,13 @@ def ControllerProcess(telloFrameShared, OSStateService, FlightCmdService):
             elif FlightCmdService.currentState() == FlightState.RUNNING_CMD:
                 """ RUNNING_CMD
                 """
-                # telloCmdRunner(FlightCmdService.controller_GetFullCmdList(), tello)
                 telloCmdPopRunner(FlightCmdService, tello)
-                # FlightCmdService.controller_CmdDone()
-                if not FlightCmdService.isCmdRunAllComplete():
+                if FlightCmdService.isCmdRunAllComplete():
                     FlightCmdService.controller_CmdDone()
+            elif FlightCmdService.currentState() == FlightState.GET_INFO:
+                """ GET_INFO
+                """
+                telloGetInfoRunner(FlightCmdService, tello)
             elif FlightCmdService.currentState() == FlightState.DONE:
                 """ DONE
                 """
@@ -78,6 +80,25 @@ def telloCmdPopRunner(FlightCmdService, tello):
         tello.move_right(cmd['value'])
     elif cmd['cmd'] == CmdEnum.land:
         tello.land()
+
+
+def telloGetInfoRunner(FlightCmdService, tello):
+    cmd = FlightCmdService.controller_getUavInfoCmd()
+    result = None
+    if cmd == CmdEnum.get_battery:
+        result = tello.get_battery()
+    elif cmd == CmdEnum.get_height:
+        result = tello.get_height()
+    FlightCmdService.controller_getUavInfoDone(result)
+
+
+def telloGetInfoRunnerDummy(FlightCmdService):
+    cmd = FlightCmdService.controller_getUavInfoCmd()
+    if cmd == CmdEnum.get_battery:
+        logger.ctrp_info("get battery")
+    elif cmd == CmdEnum.get_height:
+        logger.ctrp_info("get height")
+    FlightCmdService.controller_getUavInfoDone(12)
 
 
 def telloCmdPopRunnerDummy(FlightCmdService):
@@ -117,12 +138,14 @@ def controllerProcessDummy(telloFrameShared, OSStateService, FlightCmdService):
             elif FlightCmdService.currentState() == FlightState.RUNNING_CMD:
                 """ RUNNING_CMD
                 """
-                # telloCmdRunner(FlightCmdService.controller_GetFullCmdList(), tello)
-                # FlightCmdService.controller_CmdDone()
                 telloCmdPopRunnerDummy(FlightCmdService)
                 if FlightCmdService.isCmdRunAllComplete():
                     logger.ctrp_debug("in cmd run all complete")
                     FlightCmdService.controller_CmdDone()
+            elif FlightCmdService.currentState() == FlightState.GET_INFO:
+                """ GET_INFO
+                """
+                telloGetInfoRunnerDummy(FlightCmdService)
             elif FlightCmdService.currentState() == FlightState.DONE:
                 """ DONE
                 """

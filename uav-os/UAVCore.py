@@ -34,9 +34,9 @@ if __name__ == '__main__':
     osStateService = manager.osStateService()
     flightCmdService = manager.flightCmdService()
 
-    '''OS環境變數
+    '''OS環境變數：test 狀態下不會啟動 Tello與 openCV
     '''
-    osStateService.setMode("test")
+    osStateService.setMode("dev")
 
     ''' 執行緒創建
     '''

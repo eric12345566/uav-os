@@ -10,3 +10,7 @@ class CmdEnum(Enum):
     takeoff = 'takeoff'
     emergency = 'emergency'
     rotate_clockwise = 'rotate_clockwise'
+    """ Info
+    """
+    get_battery = 'get_battery'
+    get_height = 'get_height'

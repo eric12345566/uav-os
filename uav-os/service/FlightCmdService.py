@@ -16,6 +16,11 @@ class FlightCmdService(object):
         self.__cmdPopIdx = 0
         self.__cmdListLen = 0
 
+        # Get Info
+        self.__uavInfoCmd = None
+        self.__uavInfoValue = None
+        self.__getInfoReturnFlightState = None
+
     """
         Utility function
     """
@@ -89,3 +94,20 @@ class FlightCmdService(object):
         # Clear
         self.__registerProcess = ""
         self.__cmdList.clear()
+
+    """ Get UAV Info
+    """
+    def runUavInfoCmd(self, cmd):
+        self.__uavInfoCmd = cmd
+        self.__getInfoReturnFlightState = self.__State
+        self.__setstate__(FlightState.GET_INFO)
+
+    def getUavInfoValue(self):
+        return self.__uavInfoValue
+
+    def controller_getUavInfoCmd(self):
+        return self.__uavInfoCmd
+
+    def controller_getUavInfoDone(self, value):
+        self.__uavInfoValue = value
+        self.__setstate__(self.__getInfoReturnFlightState)
