@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     '''OS環境變數
     '''
-    osStateService.setMode("dev")
+    osStateService.setMode("test")
 
     ''' 執行緒創建
     '''

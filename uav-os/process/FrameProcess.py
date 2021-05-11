@@ -40,4 +40,5 @@ def FrameProcess(shareFrame, OSStateService):
         logger.fp_debug("End")
     else:
         logger.fp_debug("In Testing mode, Not open Frame")
+        OSStateService.frameInitReady()
 

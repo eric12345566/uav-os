@@ -5,13 +5,19 @@ import multiprocessing as mp
 class FlightCmdService(object):
 
     def __init__(self):
+
+        # State
         self.__State = FlightState.INIT_SYSTEM
         self.lock = mp.Lock()
-        self.__registerProcess = None
+        self.__registerProcess = ""
+
+        # CMD
         self.__cmdList = []
+        self.__cmdPopIdx = 0
+        self.__cmdListLen = 0
 
     """
-        utility function
+        Utility function
     """
     def __setstate__(self, state):
         self.lock.acquire()
@@ -29,28 +35,57 @@ class FlightCmdService(object):
 
         self.__setstate__(FlightState.READY_FOR_CMD)
 
-    def registerInputCmdProcess(self, processID):
-        self.__registerProcess = processID
-
-        self.__setstate__(FlightState.INPUT_CMD)
+    def registerInputCmdProcess(self, processID) -> bool:
+        # Process 註冊 Service，切換到 INPUT_CMD 狀態，其他人無法使用
+        if self.__registerProcess == "":
+            self.__registerProcess = processID
+            self.__setstate__(FlightState.INPUT_CMD)
+            return True
+        else:
+            return False
 
     def cmdListAdd(self, cmd, value):
+        # 新增一行 CMD 到 List 中
         self.lock.acquire()
         self.__cmdList.append({"cmd": cmd, "value": value})
         self.lock.release()
 
     def cmdListAssign(self, cmdList):
+        # 直接Assign一個List
         self.__cmdList = cmdList
 
-    def controller_GetCmdList(self):
+    def controller_GetFullCmdList(self):
+        # For Controller: 獲取 cmdList
         return self.__cmdList
 
+    def controller_PopCmd(self):
+        # Pop一個cmd並return，注意這邊pop從頭開始，
+        if not self.isCmdRunAllComplete():
+            cmd = self.__cmdList.pop(0)
+            self.__cmdPopIdx += 1
+            return cmd
+        else:
+            return None
+
+    def isCmdRunAllComplete(self):
+        if self.__cmdListLen == self.__cmdPopIdx:
+            return True
+        else:
+            return False
+
     def startRunCmd(self):
+        # 開始執行 CMD
         self.__setstate__(FlightState.RUNNING_CMD)
+        self.__cmdListLen = len(self.__cmdList)
+        self.__cmdPopIdx = 0
 
     def controller_CmdDone(self):
-        self.__cmdList.clear()
+        # For Controller: cmd 執行完
         self.__setstate__(FlightState.DONE)
 
     def controller_StateBackToReady(self):
         self.__setstate__(FlightState.READY_FOR_CMD)
+
+        # Clear
+        self.__registerProcess = ""
+        self.__cmdList.clear()

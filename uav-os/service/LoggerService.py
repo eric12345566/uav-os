@@ -68,8 +68,12 @@ class ColorHandler(logging.StreamHandler):
 
 class LoggerService(object):
     def __init__(self):
+        # LOGGING_FORMAT = '%(asctime)s %(levelname)s: %(message)s'
+        LOGGING_FORMAT = ''
+        DATE_FORMAT = '%Y%m%d %H:%M:%S'
         logging.getLogger().setLevel(logging.DEBUG)
-        logging.getLogger().addHandler(ColorHandler())
+        logging.basicConfig(level=logging.DEBUG, format=LOGGING_FORMAT, datefmt=DATE_FORMAT)
+        # logging.getLogger().addHandler(ColorHandler())
 
         # TODO: Mode for log bound
         self.Mode = "dev"

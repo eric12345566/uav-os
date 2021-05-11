@@ -5,6 +5,8 @@ from State.FlightStateEnum import FlightState
 from State.CmdEnum import CmdEnum
 from service.LoggerService import LoggerService
 
+logger = LoggerService()
+
 
 def ControllerProcess(telloFrameShared, OSStateService, FlightCmdService):
     """ init Tello object
@@ -39,8 +41,11 @@ def ControllerProcess(telloFrameShared, OSStateService, FlightCmdService):
             elif FlightCmdService.currentState() == FlightState.RUNNING_CMD:
                 """ RUNNING_CMD
                 """
-                telloCmdRunner(FlightCmdService.controller_GetFullCmdList(), tello)
-                FlightCmdService.controller_CmdDone()
+                # telloCmdRunner(FlightCmdService.controller_GetFullCmdList(), tello)
+                telloCmdPopRunner(FlightCmdService, tello)
+                # FlightCmdService.controller_CmdDone()
+                if not FlightCmdService.isCmdRunAllComplete():
+                    FlightCmdService.controller_CmdDone()
             elif FlightCmdService.currentState() == FlightState.DONE:
                 """ DONE
                 """
@@ -61,31 +66,64 @@ def telloCmdRunner(cmdList, tello):
             tello.land()
 
 
-def controllerProcessDummy(telloFrameShared, OSStateService, FlightCmdService):
-    print("Tello Fly")
+def telloCmdPopRunner(FlightCmdService, tello):
+    cmd = FlightCmdService.controller_PopCmd()
+    if cmd['cmd'] == CmdEnum.takeoff:
+        tello.takeoff()
+    elif cmd['cmd'] == CmdEnum.move_forward:
+        tello.move_forward(cmd['value'])
+    elif cmd['cmd'] == CmdEnum.move_left:
+        tello.move_left(cmd['value'])
+    elif cmd['cmd'] == CmdEnum.move_right:
+        tello.move_right(cmd['value'])
+    elif cmd['cmd'] == CmdEnum.land:
+        tello.land()
 
-    # Controller Ready
-    OSStateService.setState(OSState.READY)
+
+def telloCmdPopRunnerDummy(FlightCmdService):
+    cmd = FlightCmdService.controller_PopCmd()
+    if cmd['cmd'] == CmdEnum.takeoff:
+        logger.ctrp_info("takeoff")
+    elif cmd['cmd'] == CmdEnum.move_forward:
+        logger.ctrp_info("move_forward")
+    elif cmd['cmd'] == CmdEnum.move_left:
+        logger.ctrp_info("move_left")
+    elif cmd['cmd'] == CmdEnum.move_right:
+        logger.ctrp_info("move_right")
+    elif cmd['cmd'] == CmdEnum.land:
+        logger.ctrp_info("land")
+    time.sleep(1)
+
+
+def controllerProcessDummy(telloFrameShared, OSStateService, FlightCmdService):
+    logger.ctrp_info("Start Process")
+
+    """ State Change
+    """
+    OSStateService.controllerInitReady()
     FlightCmdService.initDone()
 
     while True:
 
-        # state: ready_for_cmd
-        if FlightCmdService.currentState() == FlightState.READY_FOR_CMD:
-            print("CtrProcess: ready, ", FlightCmdService.currentState())
-            pass
-        elif FlightCmdService.currentState() == FlightState.INPUT_CMD:
-            print("CtrProcess: wait for input cmd..")
-        elif FlightCmdService.currentState() == FlightState.RUNNING_CMD:
-            print("CtrProcess: running cmd..")
-            i = 0
-            # for cmd in FlightCmdService.controller_GetCmdList():
-            #     print("i: ", i)
-            #     print(cmd)
-            #     i += 1
-            telloCmdRunner(FlightCmdService.controller_GetFullCmdList())
-            FlightCmdService.controller_CmdDone()
-        elif FlightCmdService.currentState() == FlightState.DONE:
-            print("Done")
-            FlightCmdService.controller_StateBackToReady()
-            break
+        if OSStateService.getCurrentState() != OSState.INITIALIZING:
+            if FlightCmdService.currentState() == FlightState.READY_FOR_CMD:
+                """ READY_FOR_CMD
+                """
+                pass
+            elif FlightCmdService.currentState() == FlightState.INPUT_CMD:
+                """ INPUT_CMD
+                """
+                pass
+            elif FlightCmdService.currentState() == FlightState.RUNNING_CMD:
+                """ RUNNING_CMD
+                """
+                # telloCmdRunner(FlightCmdService.controller_GetFullCmdList(), tello)
+                # FlightCmdService.controller_CmdDone()
+                telloCmdPopRunnerDummy(FlightCmdService)
+                if FlightCmdService.isCmdRunAllComplete():
+                    logger.ctrp_debug("in cmd run all complete")
+                    FlightCmdService.controller_CmdDone()
+            elif FlightCmdService.currentState() == FlightState.DONE:
+                """ DONE
+                """
+                FlightCmdService.controller_StateBackToReady()
