@@ -59,6 +59,13 @@ class FlightCmdService(object):
         # 直接Assign一個List
         self.__cmdList = cmdList
 
+    def cmdRunOnce(self, cmd, value):
+        # 至跑一次，注意這會刪除其他
+        self.lock.acquire()
+        self.__cmdList.clear()
+        self.__cmdList.append({"cmd": cmd, "value": value})
+        self.lock.release()
+
     def controller_GetFullCmdList(self):
         # For Controller: 獲取 cmdList
         return self.__cmdList
