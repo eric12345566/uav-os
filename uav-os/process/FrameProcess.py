@@ -39,6 +39,33 @@ def FrameProcess(shareFrame, OSStateService):
         cv.destroyAllWindows()
         logger.fp_debug("End")
     else:
+        """ 用本機電腦當測試
+        """
         logger.fp_debug("In Testing mode, Not open Frame")
+        cap = cv.VideoCapture(0)
         OSStateService.frameInitReady()
+        while True:
+            # print("ctr: ",OSStateService.getControllerInitState())
+            if OSStateService.getControllerInitState():
+
+                if not cap.isOpened():
+                    logger.fp_error("VideoCapture not opened")
+                    exit(-1)
+
+                ret, frame = cap.read()
+                shareFrame.setFrame(frame)
+
+                if not ret:
+                    logger.fp_error("frame empty")
+                    break
+
+                cv.imshow('frame', frame)
+                if cv.waitKey(1) & 0xFF == ord('q'):
+                    break
+                OSStateService.frameInitReady()
+        cap.release()
+        cv.destroyAllWindows()
+        logger.fp_debug("End")
+
+
 
