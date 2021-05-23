@@ -1,12 +1,13 @@
 import time
 import numpy as np
 import cv2 as cv
+from threading import Thread
 from State.OSStateEnum import OSState
 from State.FlightStateEnum import FlightState
 from State.CmdEnum import CmdEnum
 from service.LoggerService import LoggerService
 from module.BackgroundFrameRead import BackgroundFrameRead
-
+from threading import Thread
 # Algo
 from module.algo.arucoMarkerDetect import arucoMarkerDetect, arucoMarkerDetectFrame
 
@@ -70,6 +71,21 @@ def uavGetInfo(infoCmd, FlightCmdService):
     return FlightCmdService.getUavInfoValue()
 
 
+def backgroundSendFrame(FrameService, telloFrameBFR):
+    """ 使用 Thread 跑此func，將 frame 寫入 FrameService
+    """
+    while True:
+        frame = telloFrameBFR.frame
+
+        # test Add frame
+        frame = cv.flip(frame, 1)
+        markedFrame = arucoMarkerDetectFrame(frame)
+
+        # Send frame to FrameProcess
+        FrameService.setFrame(frame)
+        FrameService.setFrameReady()
+
+
 """ Process
 """
 
@@ -83,7 +99,10 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
     telloUDPAddr = FrameService.getAddress()
     telloFrameBFR = BackgroundFrameRead(telloUDPAddr)
     telloFrameBFR.start()
-    frame = telloFrameBFR.frame
+
+    # 開啟一個 thread，讓他負責傳送frame給FrameProcess顯示
+    frameSendWorker = Thread(target=backgroundSendFrame, args=(FrameService, telloFrameBFR,), daemon=True)
+    frameSendWorker.start()
 
     # ------------------ AutoFlightProcess is ready, init code End --------------------
     OSStateService.autoFlightInitReady()
@@ -95,10 +114,15 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
     logger.afp_debug("AFP Start")
 
     while True:
-        frame = telloFrameBFR.frame
-        frame = cv.flip(frame, 1)
-        markedFrame = arucoMarkerDetectFrame(frame)
+        pass
+
+        # frame = telloFrameBFR.frame
+        # frame = cv.flip(frame, 1)
+        # markedFrame = arucoMarkerDetectFrame(frame)
 
         # Send frame to FrameProcess
-        FrameService.setFrame(markedFrame)
-        FrameService.setFrameReady()
+        # FrameService.setFrame(markedFrame)
+        # FrameService.setFrameReady()
+
+    # Stop framSendWorker
+    frameSendWorker.join()

@@ -11,6 +11,7 @@ class BackgroundFrameRead:
     def __init__(self, address):
 
         self.cap = cv2.VideoCapture(address)
+        # self.frameService = frameService
 
         if not self.cap.isOpened():
             self.cap.open(address)
@@ -37,6 +38,8 @@ class BackgroundFrameRead:
                 self.stop()
             else:
                 self.grabbed, self.frame = self.cap.read()
+                # self.frameService.setFrame(self.frame)
+                # self.frameService.setFrame(self.frame)
 
     def stop(self):
         """Stop the frame update worker
