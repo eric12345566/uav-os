@@ -1,46 +1,34 @@
 import cv2 as cv
 from State.OSStateEnum import OSState
 from service.LoggerService import LoggerService
+from module.BackgroundFrameRead import BackgroundFrameRead
 
 
-def FrameProcess(shareFrame, OSStateService):
+def FrameProcess(FrameService, OSStateService):
+    """ 顯示Frame用，主要使用 cv.imshow() 顯示 frame
+    """
     logger = LoggerService()
     logger.fp_debug("Start")
-    # cap = cv.VideoCapture(0)
 
-    # OSStateService.frameInitReady()
-    initCapOneTime = False
+    # Frame Init OK
+    OSStateService.frameInitReady()
+
+    # Wait For Controller Ready
+    while not FrameService.isFrameReady():
+        pass
+
+    # Show frame
     while True:
-        # print("ctr: ",OSStateService.getControllerInitState())
-        if OSStateService.getControllerInitState():
+        frame = FrameService.getFrame()
 
-            if not initCapOneTime:
-                address = shareFrame.getAddress()
-                cap = cv.VideoCapture(address)
-                initCapOneTime = True
-
-            if not cap.isOpened():
-                logger.fp_error("VideoCapture not opened")
-                exit(-1)
-
-            ret, frame = cap.read()
-            frame = cv.flip(frame, 1)
-            shareFrame.setFrame(frame)
-
-            if not ret:
-                logger.fp_error("frame empty")
-                break
-            shareFrame.frame_frameReady()
-
-            cv.imshow('frame', frame)
-            if cv.waitKey(1) & 0xFF == ord('q'):
-                break
-            OSStateService.frameInitReady()
-    cap.release()
+        cv.imshow('frame', frame)
+        if cv.waitKey(1) & 0xFF == ord('q'):
+            break
     cv.destroyAllWindows()
     logger.fp_debug("End")
 
 
+# 拋棄，目前所有測試請使用Tello來進行
 def FrameProcessTest(shareFrame, OSStateService):
     logger = LoggerService()
     logger.fp_debug("Start")
@@ -64,7 +52,7 @@ def FrameProcessTest(shareFrame, OSStateService):
                 logger.fp_error("frame empty")
                 break
 
-            shareFrame.frame_frameReady()
+            shareFrame.setFrameReady()
             # while not markedFrameService.isMarkedFrameReady():
             #     pass
             #

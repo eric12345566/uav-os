@@ -54,6 +54,10 @@ def ControllerProcess(telloFrameShared, OSStateService, FlightCmdService):
                 FlightCmdService.controller_StateBackToReady()
 
 
+""" CMD Runner
+"""
+
+
 def telloCmdRunner(cmdList, tello):
     for idx, cmd in enumerate(cmdList):
         if cmd['cmd'] == CmdEnum.takeoff:
@@ -90,6 +94,10 @@ def telloGetInfoRunner(FlightCmdService, tello):
     elif cmd == CmdEnum.get_height:
         result = tello.get_height()
     FlightCmdService.controller_getUavInfoDone(result)
+
+
+""" Dummy Runner
+"""
 
 
 def telloGetInfoRunnerDummy(FlightCmdService):
@@ -140,7 +148,7 @@ def controllerProcessDummy(telloFrameShared, OSStateService, FlightCmdService):
                 """
                 telloCmdPopRunnerDummy(FlightCmdService)
                 if FlightCmdService.isCmdRunAllComplete():
-                    logger.ctrp_debug("in cmd run all complete")
+                    # logger.ctrp_debug("in cmd run all complete")
                     FlightCmdService.controller_CmdDone()
             elif FlightCmdService.currentState() == FlightState.GET_INFO:
                 """ GET_INFO

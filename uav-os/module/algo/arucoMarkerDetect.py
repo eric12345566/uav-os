@@ -9,6 +9,15 @@ def arucoMarkerDetect(frame):
     arucoParameters = aruco.DetectorParameters_create()
     _corners, _ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=arucoParameters)
 
+    return _corners, _ids, rejectedImgPoints
+
+
+def arucoMarkerDetectFrame(frame):
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    aruco_dict = aruco.Dictionary_get(aruco.DICT_5X5_1000)
+    arucoParameters = aruco.DetectorParameters_create()
+    _corners, _ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=arucoParameters)
+
     if np.all(_ids is not None):
         # print(_ids)
         x_sum = _corners[0][0][0][0] + _corners[0][0][1][0] + _corners[0][0][2][0] + _corners[0][0][3][0]

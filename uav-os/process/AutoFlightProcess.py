@@ -1,11 +1,19 @@
 import time
+import numpy as np
 import cv2 as cv
 from State.OSStateEnum import OSState
 from State.FlightStateEnum import FlightState
 from State.CmdEnum import CmdEnum
 from service.LoggerService import LoggerService
+from module.BackgroundFrameRead import BackgroundFrameRead
+
+# Algo
+from module.algo.arucoMarkerDetect import arucoMarkerDetect, arucoMarkerDetectFrame
 
 logger = LoggerService()
+
+""" Utilities
+"""
 
 
 def cmdListAdd(cmdList, cmd, value):
@@ -14,6 +22,10 @@ def cmdListAdd(cmdList, cmd, value):
 
 def cmdListClear(cmdList):
     cmdList.clear()
+
+
+""" CMD Runner
+"""
 
 
 def cmdListUavRun(FlightCmdService, cmdList):
@@ -58,61 +70,35 @@ def uavGetInfo(infoCmd, FlightCmdService):
     return FlightCmdService.getUavInfoValue()
 
 
-def AutoFlightProcess(uavFrame, OSStateService, FlightCmdService):
-    state = "first"
+""" Process
+"""
 
+
+def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
+    # Wait for Controller Ready, and get the frame
+    while not OSStateService.getControllerInitState():
+        pass
+
+    # Get Frame from UDP using BackgroundFrameRead class (thread)
+    telloUDPAddr = FrameService.getAddress()
+    telloFrameBFR = BackgroundFrameRead(telloUDPAddr)
+    telloFrameBFR.start()
+    frame = telloFrameBFR.frame
+
+    # ------------------ AutoFlightProcess is ready, init code End --------------------
     OSStateService.autoFlightInitReady()
 
-    # while OSStateService.getCurrentState() != OSState.READY:
-    #     print("wait for OS.ready")
-    cmdList1 = []
-    cmdListAdd(cmdList1, CmdEnum.takeoff, 0)
-    cmdListAdd(cmdList1, CmdEnum.move_left, 100)
-    cmdListAdd(cmdList1, CmdEnum.move_right, 100)
-
-    cmdList2 = []
-    cmdListAdd(cmdList2, CmdEnum.move_left, 100)
-    cmdListAdd(cmdList2, CmdEnum.move_right, 100)
-    cmdListAdd(cmdList2, CmdEnum.move_right, 100)
-    cmdListAdd(cmdList2, CmdEnum.move_left, 100)
-    cmdListAdd(cmdList2, CmdEnum.land, 0)
-
+    # Wait for OS ready
     while OSStateService.getCurrentState() == OSState.INITIALIZING:
         pass
 
+    logger.afp_debug("AFP Start")
+
     while True:
-        logger.afp_debug("Battery: " + str(uavGetInfo(CmdEnum.get_battery, FlightCmdService)))
-        # if state == "first":
-        #     if cmdListUavRun(FlightCmdService, cmdList1):
-        #         logger.afp_debug("first Done")
-        #         state = "second"
-        # elif state == "second":
-        #     if cmdListUavRun(FlightCmdService, cmdList2):
-        #         logger.afp_debug("second Done")
-        #         state = "done"
-        # elif state == "done":
-        #     logger.afp_debug("all done")
-        #     break
+        frame = telloFrameBFR.frame
+        frame = cv.flip(frame, 1)
+        markedFrame = arucoMarkerDetectFrame(frame)
 
-        if state == "first":
-            cmdUavRunOnce(FlightCmdService, CmdEnum.takeoff, 0)
-            logger.afp_debug("1")
-            cmdUavRunOnce(FlightCmdService, CmdEnum.move_right, 100)
-            logger.afp_debug("first Done")
-            state = "second"
-        elif state == "second":
-            cmdUavRunOnce(FlightCmdService, CmdEnum.move_left, 100)
-            logger.afp_debug("3")
-            cmdUavRunOnce(FlightCmdService, CmdEnum.move_right, 100)
-            logger.afp_debug("4")
-            cmdUavRunOnce(FlightCmdService, CmdEnum.move_left, 100)
-            logger.afp_debug("5")
-            cmdUavRunOnce(FlightCmdService, CmdEnum.move_right, 100)
-            logger.afp_debug("second Done")
-            state = "done"
-        elif state == "done":
-            cmdUavRunOnce(FlightCmdService, CmdEnum.land, 100)
-            logger.afp_debug("all done")
-            break
-
-
+        # Send frame to FrameProcess
+        FrameService.setFrame(markedFrame)
+        FrameService.setFrameReady()
