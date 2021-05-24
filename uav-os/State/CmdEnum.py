@@ -17,3 +17,4 @@ class CmdEnum(Enum):
     """
     get_battery = 'get_battery'
     get_height = 'get_height'
+    get_distance_tof = 'get_distance_tof'

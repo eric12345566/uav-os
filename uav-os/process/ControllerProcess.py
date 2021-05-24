@@ -94,6 +94,8 @@ def telloCmdPopRunner(FlightCmdService, tello):
     elif cmd['cmd'] == CmdEnum.land:
         tello.land()
     elif cmd['cmd'] == CmdEnum.send_rc_control:
+        logger.ctrp_debug("rc: " + str(cmd['value'][0]) + "," + str(cmd['value'][1]) + ","
+                          + str(cmd['value'][2]) + "," + str(cmd['value'][3]))
         tello.send_rc_control(cmd['value'][0], cmd['value'][1], cmd['value'][2], cmd['value'][3])
 
 
@@ -104,6 +106,9 @@ def telloGetInfoRunner(FlightCmdService, tello):
         result = tello.get_battery()
     elif cmd == CmdEnum.get_height:
         result = tello.get_height()
+    elif cmd == CmdEnum.get_distance_tof:
+        tof_height_text = tello.get_distance_tof()
+        result = int(tof_height_text.split("mm")[0])
     FlightCmdService.controller_getUavInfoDone(result)
 
 

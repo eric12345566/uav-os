@@ -47,11 +47,12 @@ def cmdUavRunOnce(FlightCmdService, cmd, value):
 
     while True:
         if FlightCmdService.currentState() == FlightState.READY_FOR_CMD:
-            logger.afp_debug("CTR READY")
+            # logger.afp_debug("CTR READY")
             if FlightCmdService.registerInputCmdProcess("autoP"):
-                logger.afp_debug("register Ctr Process Success")
+                # logger.afp_debug("register Ctr Process Success")
+                pass
             else:
-                logger.afp_debug("register Ctr Process Fail, try again..")
+                # logger.afp_debug("register Ctr Process Fail, try again..")
                 time.sleep(0.5)
         elif FlightCmdService.currentState() == FlightState.INPUT_CMD:
             FlightCmdService.cmdRunOnce(cmd, value)
@@ -59,10 +60,10 @@ def cmdUavRunOnce(FlightCmdService, cmd, value):
         elif FlightCmdService.currentState() == FlightState.RUNNING_CMD:
             alreadyRunOnce = True
         elif FlightCmdService.currentState() == FlightState.FORCE_LAND:
-            logger.afp_debug("cmd Force Landing")
+            # logger.afp_debug("cmd Force Landing")
             break
         elif FlightCmdService.currentState() == FlightState.DONE:
-            logger.afp_debug("CTR DONE")
+            # logger.afp_debug("CTR DONE")
             if alreadyRunOnce:
                 break
 
@@ -118,6 +119,12 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
     cmdUavRunOnce(FlightCmdService, CmdEnum.takeoff, 0)
 
     # Main
+    Speed = 15
+    for_back_velocity = 0
+    left_right_velocity = 0
+    up_down_velocity = 0
+    yaw_velocity = 0
+
     while True:
         # Process frame
         frame = telloFrameBFR.frame
@@ -130,20 +137,48 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
         corners, ids, rejectedImgPoints = arucoMarkerDetect(frame)
 
         if np.all(ids is not None):
-            # print(_ids)
+            # 算出中間點位置
             x_sum = corners[0][0][0][0] + corners[0][0][1][0] + corners[0][0][2][0] + corners[0][0][3][0]
             y_sum = corners[0][0][0][1] + corners[0][0][1][1] + corners[0][0][2][1] + corners[0][0][3][1]
-
             x_centerPixel = x_sum * .25
             y_centerPixel = y_sum * .25
+            logger.afp_debug("x_c: " + str(x_centerPixel) + ",y_c: " + str(y_centerPixel))
+
+            # 讓飛機對準降落點
+            if x_centerPixel < 400:
+                logger.afp_debug("Tello Right")
+                left_right_velocity = Speed
+            elif x_centerPixel > 500:
+                logger.afp_debug("Tello Left")
+                left_right_velocity = -Speed
+            else:
+                left_right_velocity = 0
+
+            if y_centerPixel < 250:
+                logger.afp_debug("Tello Down")
+                for_back_velocity = -Speed
+            elif y_centerPixel > 350:
+                logger.afp_debug("Tello Up")
+                for_back_velocity = Speed
+            else:
+                for_back_velocity = 0
+
+            # TODO: 下降到降落的程式，尚未完備
+            # if (400 < x_centerPixel < 500) and (250 < y_centerPixel < 350):
+            #     last_height = uavGetInfo(CmdEnum.get_distance_tof, FlightCmdService)
+            #     up_down_velocity = -30
+            #
+            #     while last_height - uavGetInfo(CmdEnum.get_distance_tof, FlightCmdService) < 50:
+            #
+            #         pass
+            #
+            #     up_down_velocity = 0
+
+            cmdUavRunOnce(FlightCmdService, CmdEnum.send_rc_control, [left_right_velocity, for_back_velocity,
+                                                                      up_down_velocity, yaw_velocity])
         else:
             x_centerPixel = 0.0
             x_centerPixel = 0.0
-
-        # logger.afp_debug("x_c: " + str(x_centerPixel) + ",y_c: " + str(y_centerPixel))
-
-        cmdUavRunOnce(FlightCmdService, CmdEnum.move_forward, 100)
-        cmdUavRunOnce(FlightCmdService, CmdEnum.move_back, 100)
 
     # Stop frameSendWorker
     frameSendWorker.join()
