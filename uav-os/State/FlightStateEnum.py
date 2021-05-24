@@ -8,4 +8,5 @@ class FlightState(Enum):
     RUNNING_CMD = 'running_cmd'
     DONE = 'done'
     GET_INFO = 'get_info'
+    FORCE_LAND = 'force_land'
     ERROR = 'error'

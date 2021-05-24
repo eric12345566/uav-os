@@ -58,6 +58,9 @@ def cmdUavRunOnce(FlightCmdService, cmd, value):
             FlightCmdService.startRunCmd()
         elif FlightCmdService.currentState() == FlightState.RUNNING_CMD:
             alreadyRunOnce = True
+        elif FlightCmdService.currentState() == FlightState.FORCE_LAND:
+            logger.afp_debug("cmd Force Landing")
+            break
         elif FlightCmdService.currentState() == FlightState.DONE:
             logger.afp_debug("CTR DONE")
             if alreadyRunOnce:
@@ -106,23 +109,41 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
 
     # ------------------ AutoFlightProcess is ready, init code End --------------------
     OSStateService.autoFlightInitReady()
+    logger.afp_debug("AutoFlightProcess Start")
 
     # Wait for OS ready
     while OSStateService.getCurrentState() == OSState.INITIALIZING:
         pass
 
-    logger.afp_debug("AFP Start")
+    cmdUavRunOnce(FlightCmdService, CmdEnum.takeoff, 0)
 
+    # Main
     while True:
-        pass
+        # Process frame
+        frame = telloFrameBFR.frame
+        frame = cv.flip(frame, 1)
+        logger.afp_debug("State: " + str(FlightCmdService.currentState()))
+        if FlightCmdService.currentState() == FlightState.FORCE_LAND:
+            logger.afp_warning("Force Land commit, System Shutdown")
+            break
 
-        # frame = telloFrameBFR.frame
-        # frame = cv.flip(frame, 1)
-        # markedFrame = arucoMarkerDetectFrame(frame)
+        corners, ids, rejectedImgPoints = arucoMarkerDetect(frame)
 
-        # Send frame to FrameProcess
-        # FrameService.setFrame(markedFrame)
-        # FrameService.setFrameReady()
+        if np.all(ids is not None):
+            # print(_ids)
+            x_sum = corners[0][0][0][0] + corners[0][0][1][0] + corners[0][0][2][0] + corners[0][0][3][0]
+            y_sum = corners[0][0][0][1] + corners[0][0][1][1] + corners[0][0][2][1] + corners[0][0][3][1]
 
-    # Stop framSendWorker
+            x_centerPixel = x_sum * .25
+            y_centerPixel = y_sum * .25
+        else:
+            x_centerPixel = 0.0
+            x_centerPixel = 0.0
+
+        # logger.afp_debug("x_c: " + str(x_centerPixel) + ",y_c: " + str(y_centerPixel))
+
+        cmdUavRunOnce(FlightCmdService, CmdEnum.move_forward, 100)
+        cmdUavRunOnce(FlightCmdService, CmdEnum.move_back, 100)
+
+    # Stop frameSendWorker
     frameSendWorker.join()

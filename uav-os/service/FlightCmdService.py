@@ -118,3 +118,10 @@ class FlightCmdService(object):
     def controller_getUavInfoDone(self, value):
         self.__uavInfoValue = value
         self.__setstate__(self.__getInfoReturnFlightState)
+
+    """ Force Land 
+    """
+
+    def forceLand(self):
+        self.__setstate__(FlightState.FORCE_LAND)
+        self.__cmdList.clear()

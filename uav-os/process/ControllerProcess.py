@@ -42,12 +42,17 @@ def ControllerProcess(telloFrameShared, OSStateService, FlightCmdService):
                 """ RUNNING_CMD
                 """
                 telloCmdPopRunner(FlightCmdService, tello)
-                if FlightCmdService.isCmdRunAllComplete():
+                if FlightCmdService.isCmdRunAllComplete() and FlightCmdService.currentState() != FlightState.FORCE_LAND:
                     FlightCmdService.controller_CmdDone()
             elif FlightCmdService.currentState() == FlightState.GET_INFO:
                 """ GET_INFO
                 """
                 telloGetInfoRunner(FlightCmdService, tello)
+            elif FlightCmdService.currentState() == FlightState.FORCE_LAND:
+                """ FORCE_LAND
+                """
+                logger.ctrp_warning("Force Land Commit..")
+                tello.land()
             elif FlightCmdService.currentState() == FlightState.DONE:
                 """ DONE
                 """
@@ -70,6 +75,8 @@ def telloCmdRunner(cmdList, tello):
             tello.move_right(cmd['value'])
         elif cmd['cmd'] == CmdEnum.land:
             tello.land()
+        elif cmd['cmd'] == CmdEnum.send_rc_control:
+            tello.send_rc_control(cmd['value'][0], cmd['value'][1], cmd['value'][2], cmd['value'][3])
 
 
 def telloCmdPopRunner(FlightCmdService, tello):
@@ -78,12 +85,16 @@ def telloCmdPopRunner(FlightCmdService, tello):
         tello.takeoff()
     elif cmd['cmd'] == CmdEnum.move_forward:
         tello.move_forward(cmd['value'])
+    elif cmd['cmd'] == CmdEnum.move_back:
+        tello.move_back(cmd['value'])
     elif cmd['cmd'] == CmdEnum.move_left:
         tello.move_left(cmd['value'])
     elif cmd['cmd'] == CmdEnum.move_right:
         tello.move_right(cmd['value'])
     elif cmd['cmd'] == CmdEnum.land:
         tello.land()
+    elif cmd['cmd'] == CmdEnum.send_rc_control:
+        tello.send_rc_control(cmd['value'][0], cmd['value'][1], cmd['value'][2], cmd['value'][3])
 
 
 def telloGetInfoRunner(FlightCmdService, tello):

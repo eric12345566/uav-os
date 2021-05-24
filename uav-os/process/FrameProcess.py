@@ -4,7 +4,7 @@ from service.LoggerService import LoggerService
 from module.BackgroundFrameRead import BackgroundFrameRead
 
 
-def FrameProcess(FrameService, OSStateService):
+def FrameProcess(FrameService, OSStateService, FlightCmdService):
     """ 顯示Frame用，主要使用 cv.imshow() 顯示 frame
     """
     logger = LoggerService()
@@ -23,6 +23,7 @@ def FrameProcess(FrameService, OSStateService):
 
         cv.imshow('frame', frame)
         if cv.waitKey(1) & 0xFF == ord('q'):
+            FlightCmdService.forceLand()
             break
     cv.destroyAllWindows()
     logger.fp_debug("End")

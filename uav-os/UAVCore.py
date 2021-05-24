@@ -43,7 +43,7 @@ if __name__ == '__main__':
     afpProcess = mp.Process(target=afp.AutoFlightProcess, args=(frameService, osStateService, flightCmdService,))
 
     if osStateService.getMode() != "test":
-        frameProcess = mp.Process(target=fp.FrameProcess, args=(frameService, osStateService,))
+        frameProcess = mp.Process(target=fp.FrameProcess, args=(frameService, osStateService,flightCmdService,))
     else:
         frameProcess = mp.Process(target=fp.FrameProcessTest, args=(frameService, osStateService,))
 

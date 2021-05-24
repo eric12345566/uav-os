@@ -3,6 +3,7 @@ from enum import Enum
 
 class CmdEnum(Enum):
     move_forward = 'move_forward'
+    move_back = 'move_back'
     move_left = 'move_left'
     move_right = 'move_right'
     move_up = 'move_up'
@@ -10,6 +11,8 @@ class CmdEnum(Enum):
     takeoff = 'takeoff'
     emergency = 'emergency'
     rotate_clockwise = 'rotate_clockwise'
+    send_rc_control = 'send_rc_control'
+
     """ Info
     """
     get_battery = 'get_battery'
