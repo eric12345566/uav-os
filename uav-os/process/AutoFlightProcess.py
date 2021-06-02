@@ -119,7 +119,7 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
     cmdUavRunOnce(FlightCmdService, CmdEnum.takeoff, 0)
 
     # Main
-    Speed = 15
+    Speed = 12
     for_back_velocity = 0
     left_right_velocity = 0
     up_down_velocity = 0
@@ -164,21 +164,33 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
                 for_back_velocity = 0
 
             # TODO: 下降到降落的程式，尚未完備
-            # if (400 < x_centerPixel < 500) and (250 < y_centerPixel < 350):
-            #     last_height = uavGetInfo(CmdEnum.get_distance_tof, FlightCmdService)
-            #     up_down_velocity = -30
-            #
-            #     while last_height - uavGetInfo(CmdEnum.get_distance_tof, FlightCmdService) < 50:
-            #
-            #         pass
-            #
-            #     up_down_velocity = 0
+            isGoingDown = False
+            if (400 < x_centerPixel < 500) and (250 < y_centerPixel < 350):
 
+                last_height = uavGetInfo(CmdEnum.get_distance_tof, FlightCmdService)
+                logger.afp_debug("height: " + str(last_height))
+                if last_height <= 40:
+                    isGoingDown = True
+                up_down_velocity = -50
+            else:
+                up_down_velocity = 0
+
+            # while isGoingDown:
+            #     if last_height - uavGetInfo(CmdEnum.get_distance_tof, FlightCmdService) > 30:
+            #         up_down_velocity = -20
+            #         cmdUavRunOnce(FlightCmdService, CmdEnum.send_rc_control, [left_right_velocity, for_back_velocity,
+            #                                                                   up_down_velocity, yaw_velocity])
+            #     else:
+            #         isGoingDown = False
+            if isGoingDown:
+                cmdUavRunOnce(FlightCmdService, CmdEnum.land, 0)
+                break
             cmdUavRunOnce(FlightCmdService, CmdEnum.send_rc_control, [left_right_velocity, for_back_velocity,
                                                                       up_down_velocity, yaw_velocity])
         else:
             x_centerPixel = 0.0
             x_centerPixel = 0.0
 
+    logger.afp_info("AutoFlightProcess End")
     # Stop frameSendWorker
     frameSendWorker.join()

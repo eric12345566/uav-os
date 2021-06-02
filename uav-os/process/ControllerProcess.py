@@ -107,8 +107,7 @@ def telloGetInfoRunner(FlightCmdService, tello):
     elif cmd == CmdEnum.get_height:
         result = tello.get_height()
     elif cmd == CmdEnum.get_distance_tof:
-        tof_height_text = tello.get_distance_tof()
-        result = int(tof_height_text.split("mm")[0])
+        result = tello.get_distance_tof()
     FlightCmdService.controller_getUavInfoDone(result)
 
 
