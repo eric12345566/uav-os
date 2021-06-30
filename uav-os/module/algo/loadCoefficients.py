@@ -1,6 +1,7 @@
 import cv2
 
 
+# TODO: yml檔案該放在哪裡？
 def load_coefficients(path):
     """ Loads camera matrix and distortion coefficients. """
     # FILE_STORAGE_READ
