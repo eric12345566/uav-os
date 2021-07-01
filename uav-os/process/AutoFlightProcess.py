@@ -11,6 +11,7 @@ from service.LoggerService import LoggerService
 from service.AutoFlightStateService import AutoFlightStateService
 from module.BackgroundFrameRead import BackgroundFrameRead
 from threading import Thread
+from module.FrameSharedVar import FrameSharedVar
 
 # Algo
 from module.algo.arucoMarkerDetect import arucoMarkerDetect, arucoMarkerDetectFrame
@@ -81,7 +82,7 @@ def uavGetInfo(infoCmd, FlightCmdService):
     return FlightCmdService.getUavInfoValue()
 
 
-def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr):
+def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameSharedVar):
     """ 使用 Thread 跑此func，將 frame 寫入 FrameService
     """
     while True:
@@ -90,7 +91,14 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr):
         # test Add frame
         frame = cv.flip(frame, 1)
         # markedFrame = arucoMarkerDetectFrame(frame)
-        markedFrame = arucoTrackWriteFrame(cameraCalibArr[0], cameraCalibArr[1], frame)
+        arucoTrackWriteFrame(cameraCalibArr[0], cameraCalibArr[1], frame)
+
+        # Put some text into frame
+        cv.putText(frame, f"X Error: {frameSharedVar.getLrError()} PID: {frameSharedVar.getLrPID():.2f}", (20, 30),
+                   cv.FONT_HERSHEY_SIMPLEX, 1,
+                   (0, 255, 0), 2, cv.LINE_AA)
+        cv.putText(frame, f"Y Error: {frameSharedVar.getFbError()} PID: {frameSharedVar.getFbPID():.2f}", (20, 70),
+                   cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
 
         # Send frame to FrameProcess
         FrameService.setFrame(frame)
@@ -111,13 +119,16 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
     telloFrameBFR = BackgroundFrameRead(telloUDPAddr)
     telloFrameBFR.start()
 
+    # 新增一個可以與 frameSendWorker 快速共享變數的物件
+    frameSharedVar = FrameSharedVar()
+
     # 載入相機校正的參數 (路徑請從UAVCore.py開始算，因為這是從那建立的Process)
     cameraCalibArr = load_coefficients("./module/algo/calibration.yml")
     logger.afp_debug("cameraCalibArr is Load: " + str(cameraCalibArr))
 
     # 開啟一個 thread，讓他負責傳送frame給FrameProcess顯示
-    frameSendWorker = Thread(target=backgroundSendFrame, args=(FrameService, telloFrameBFR, cameraCalibArr,),
-                             daemon=True)
+    frameSendWorker = Thread(target=backgroundSendFrame, args=(FrameService, telloFrameBFR, cameraCalibArr,
+                                                               frameSharedVar,), daemon=True)
     frameSendWorker.start()
 
     # ------------------ AutoFlightProcess is ready, init code End --------------------
@@ -185,41 +196,24 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
 
                 # left-right
                 lrError = x_centerPixel - frameWidth // 2
-                # left_right_velocity = pid[0] * lrError + pid[1] * (lrError - pLRError)
-                # left_right_velocity = -int(np.clip(left_right_velocity, -100, 100))
+
                 # pLRError = lrError
                 left_right_velocity = lrPID(lrError)
                 left_right_velocity = int(left_right_velocity) // 3
 
+                frameSharedVar.setLrError(lrError)
+                frameSharedVar.setLrPID(left_right_velocity)
+
                 # front-back
                 fbError = y_centerPixel - frameHeight // 2
-                # for_back_velocity = pid[0] * fbError + pid[1] * (fbError - pFBError)
-                # for_back_velocity = int(np.clip(for_back_velocity, -100, 100))
+
                 # pFBError = fbError
                 for_back_velocity = fbPID(fbError)
                 for_back_velocity = -int(for_back_velocity) // 3
 
-                # if x_centerPixel < 400:
-                #     logger.afp_debug("Tello Right")
-                #     left_right_velocity = Speed
-                # elif x_centerPixel > 500:
-                #     logger.afp_debug("Tello Left")
-                #     left_right_velocity = -Speed
-                # else:
-                #     left_right_velocity = 0
-                #
-                # if y_centerPixel < 250:
-                #     logger.afp_debug("Tello Down")
-                #     for_back_velocity = -Speed
-                # elif y_centerPixel > 350:
-                #     logger.afp_debug("Tello Up")
-                #     for_back_velocity = Speed
-                # else:
-                #     for_back_velocity = 0
-
+                frameSharedVar.setFbError(fbError)
+                frameSharedVar.setFbPID(for_back_velocity)
             else:
-                x_centerPixel = 0.0
-                x_centerPixel = 0.0
                 left_right_velocity = 0
                 for_back_velocity = 0
 
