@@ -8,6 +8,7 @@ numpy = "*"
 djitellopy2 = "*"
 opencv-contrib-python = "*"
 cli-ui = "*"
+simple-pid = "*"
 
 [dev-packages]
 

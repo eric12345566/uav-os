@@ -29,7 +29,7 @@ def ControllerProcess(telloFrameShared, OSStateService, FlightCmdService):
     FlightCmdService.initDone()
 
     while True:
-        logger.ctrp_debug("State: " + str(FlightCmdService.currentState()))
+        # logger.ctrp_debug("State: " + str(FlightCmdService.currentState()))
         if OSStateService.getCurrentState() != OSState.INITIALIZING:
             if FlightCmdService.currentState() == FlightState.READY_FOR_CMD:
                 """ READY_FOR_CMD

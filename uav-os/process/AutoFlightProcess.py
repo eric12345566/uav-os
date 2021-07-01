@@ -1,6 +1,7 @@
 import time
 import numpy as np
 import cv2 as cv
+from simple_pid import PID
 from threading import Thread
 from State.OSStateEnum import OSState
 from State.FlightStateEnum import FlightState
@@ -15,7 +16,6 @@ from threading import Thread
 from module.algo.arucoMarkerDetect import arucoMarkerDetect, arucoMarkerDetectFrame
 from module.algo.loadCoefficients import load_coefficients
 from module.algo.arucoMarkerTrack import arucoTrackWriteFrame
-
 
 logger = LoggerService()
 
@@ -138,9 +138,16 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
     # afStateService.testMode()
 
     # Global Var
+    pid = [0.3, 0.3, 0]
+    pLRError = 0
+    pFBError = 0
+    lrPID = PID(0.3, 0.0001, 0.1)
+    lrPID.output_limits = (-100, 100)
+    fbPID = PID(0.3, 0.0001, 0.1)
+    fbPID.output_limits = (-100, 100)
     frameWidth = 0
     frameHeight = 0
-    Speed = 12
+    Speed = 0
     for_back_velocity = 0
     left_right_velocity = 0
     up_down_velocity = 0
@@ -149,7 +156,7 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
         # Process frame
         frame = telloFrameBFR.frame
         frame = cv.flip(frame, 1)
-        frameWidth, frameHeight, _ = frame.shape
+        frameHeight, frameWidth, _ = frame.shape
 
         # Force Landing Handler
         if FlightCmdService.currentState() == FlightState.FORCE_LAND:
@@ -163,48 +170,70 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
             afStateService.autoLanding()
         elif afStateService.getState() == AutoFlightState.AUTO_LANDING:
             # Landing procedure
-            cmdUavRunOnce(FlightCmdService, CmdEnum.land, 0)
-            # # ArUco Marker Detect
-            # corners, ids, rejectedImgPoints = arucoMarkerDetect(frame)
-            #
-            # if np.all(ids is not None):
-            #     # 算出中間點位置
-            #     x_sum = corners[0][0][0][0] + corners[0][0][1][0] + corners[0][0][2][0] + corners[0][0][3][0]
-            #     y_sum = corners[0][0][0][1] + corners[0][0][1][1] + corners[0][0][2][1] + corners[0][0][3][1]
-            #     x_centerPixel = x_sum * .25
-            #     y_centerPixel = y_sum * .25
-            #     logger.afp_debug("x_c: " + str(x_centerPixel) + ",y_c: " + str(y_centerPixel))
-            #
-            #     # 讓飛機對準降落點
-            #     if x_centerPixel < 400:
-            #         logger.afp_debug("Tello Right")
-            #         left_right_velocity = Speed
-            #     elif x_centerPixel > 500:
-            #         logger.afp_debug("Tello Left")
-            #         left_right_velocity = -Speed
-            #     else:
-            #         left_right_velocity = 0
-            #
-            #     if y_centerPixel < 250:
-            #         logger.afp_debug("Tello Down")
-            #         for_back_velocity = -Speed
-            #     elif y_centerPixel > 350:
-            #         logger.afp_debug("Tello Up")
-            #         for_back_velocity = Speed
-            #     else:
-            #         for_back_velocity = 0
-            #
-            #     cmdUavRunOnce(FlightCmdService, CmdEnum.send_rc_control, [left_right_velocity, for_back_velocity,
-            #                                                               up_down_velocity, yaw_velocity])
-            # else:
-            #     x_centerPixel = 0.0
-            #     x_centerPixel = 0.0
+            # ArUco Marker Detect
+            corners, ids, rejectedImgPoints = arucoMarkerDetect(frame)
+
+            if np.all(ids is not None):
+                # 算出中間點位置
+                x_sum = corners[0][0][0][0] + corners[0][0][1][0] + corners[0][0][2][0] + corners[0][0][3][0]
+                y_sum = corners[0][0][0][1] + corners[0][0][1][1] + corners[0][0][2][1] + corners[0][0][3][1]
+                x_centerPixel = x_sum * .25
+                y_centerPixel = y_sum * .25
+                logger.afp_debug("x_c: " + str(x_centerPixel) + ",y_c: " + str(y_centerPixel))
+
+                # 讓飛機對準降落點
+
+                # left-right
+                lrError = x_centerPixel - frameWidth // 2
+                # left_right_velocity = pid[0] * lrError + pid[1] * (lrError - pLRError)
+                # left_right_velocity = -int(np.clip(left_right_velocity, -100, 100))
+                # pLRError = lrError
+                left_right_velocity = lrPID(lrError)
+                left_right_velocity = int(left_right_velocity) // 3
+
+                # front-back
+                fbError = y_centerPixel - frameHeight // 2
+                # for_back_velocity = pid[0] * fbError + pid[1] * (fbError - pFBError)
+                # for_back_velocity = int(np.clip(for_back_velocity, -100, 100))
+                # pFBError = fbError
+                for_back_velocity = fbPID(fbError)
+                for_back_velocity = -int(for_back_velocity) // 3
+
+                # if x_centerPixel < 400:
+                #     logger.afp_debug("Tello Right")
+                #     left_right_velocity = Speed
+                # elif x_centerPixel > 500:
+                #     logger.afp_debug("Tello Left")
+                #     left_right_velocity = -Speed
+                # else:
+                #     left_right_velocity = 0
+                #
+                # if y_centerPixel < 250:
+                #     logger.afp_debug("Tello Down")
+                #     for_back_velocity = -Speed
+                # elif y_centerPixel > 350:
+                #     logger.afp_debug("Tello Up")
+                #     for_back_velocity = Speed
+                # else:
+                #     for_back_velocity = 0
+
+            else:
+                x_centerPixel = 0.0
+                x_centerPixel = 0.0
+                left_right_velocity = 0
+                for_back_velocity = 0
+
+            logger.afp_debug("fb: " + str(for_back_velocity))
+            logger.afp_debug("lr: " + str(left_right_velocity))
+            cmdUavRunOnce(FlightCmdService, CmdEnum.send_rc_control, [left_right_velocity, for_back_velocity,
+                                                                      up_down_velocity, yaw_velocity])
         elif afStateService.getState() == AutoFlightState.LANDED:
             pass
         elif afStateService.getState() == AutoFlightState.END:
             pass
         elif afStateService.getState() == AutoFlightState.TEST_MODE:
-            pass
+            print("frameWidth: ", frameWidth)
+            print("frameHeight: ", frameHeight)
 
     logger.afp_info("AutoFlightProcess End")
     # Stop frameSendWorker
