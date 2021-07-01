@@ -1,3 +1,5 @@
+import time
+
 from State.AutoFlightStateEnum import AutoFlightState
 
 
