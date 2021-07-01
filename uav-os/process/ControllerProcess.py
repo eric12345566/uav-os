@@ -97,8 +97,8 @@ def telloCmdPopRunner(FlightCmdService, tello):
     elif cmd['cmd'] == CmdEnum.land:
         tello.land()
     elif cmd['cmd'] == CmdEnum.send_rc_control:
-        logger.ctrp_debug("rc: " + str(cmd['value'][0]) + "," + str(cmd['value'][1]) + ","
-                          + str(cmd['value'][2]) + "," + str(cmd['value'][3]))
+        # logger.ctrp_debug("rc: " + str(cmd['value'][0]) + "," + str(cmd['value'][1]) + ","
+        #                   + str(cmd['value'][2]) + "," + str(cmd['value'][3]))
         tello.send_rc_control(cmd['value'][0], cmd['value'][1], cmd['value'][2], cmd['value'][3])
 
 
