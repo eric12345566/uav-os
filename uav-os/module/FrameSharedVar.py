@@ -5,6 +5,7 @@ class FrameSharedVar:
         self.lrPID = 0
         self.fbError = 0
         self.fbPID = 0
+        self.landHeight = 0
 
     """ LrError & LrPID
     """

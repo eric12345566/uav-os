@@ -99,6 +99,8 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
                    (0, 255, 0), 2, cv.LINE_AA)
         cv.putText(frame, f"Y Error: {frameSharedVar.getFbError()} PID: {frameSharedVar.getFbPID():.2f}", (20, 70),
                    cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
+        cv.putText(frame, f"Land Height: {frameSharedVar.landHeight}", (20, 110),
+                   cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
 
         # Send frame to FrameProcess
         FrameService.setFrame(frame)
@@ -149,20 +151,15 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
     # afStateService.testMode()
 
     # Global Var
-    pid = [0.3, 0.3, 0]
-    pLRError = 0
-    pFBError = 0
     lrPID = PID(0.3, 0.0001, 0.1)
     lrPID.output_limits = (-100, 100)
     fbPID = PID(0.3, 0.0001, 0.1)
     fbPID.output_limits = (-100, 100)
-    frameWidth = 0
-    frameHeight = 0
-    Speed = 0
     for_back_velocity = 0
     left_right_velocity = 0
     up_down_velocity = 0
     yaw_velocity = 0
+    canLanding = False
     while True:
         # Process frame
         frame = telloFrameBFR.frame
@@ -190,14 +187,12 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
                 y_sum = corners[0][0][0][1] + corners[0][0][1][1] + corners[0][0][2][1] + corners[0][0][3][1]
                 x_centerPixel = x_sum * .25
                 y_centerPixel = y_sum * .25
-                logger.afp_debug("x_c: " + str(x_centerPixel) + ",y_c: " + str(y_centerPixel))
+                # logger.afp_debug("x_c: " + str(x_centerPixel) + ",y_c: " + str(y_centerPixel))
 
                 # 讓飛機對準降落點
 
                 # left-right
                 lrError = x_centerPixel - frameWidth // 2
-
-                # pLRError = lrError
                 left_right_velocity = lrPID(lrError)
                 left_right_velocity = int(left_right_velocity) // 3
 
@@ -206,28 +201,56 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
 
                 # front-back
                 fbError = y_centerPixel - frameHeight // 2
-
-                # pFBError = fbError
                 for_back_velocity = fbPID(fbError)
                 for_back_velocity = -int(for_back_velocity) // 3
 
                 frameSharedVar.setFbError(fbError)
                 frameSharedVar.setFbPID(for_back_velocity)
+
+                # 偵測是否可以下降
+                if abs(fbError) < 30 and abs(lrError) < 30:
+                    canLanding = True
+                    for_back_velocity = 0
+                    left_right_velocity = 0
             else:
                 left_right_velocity = 0
                 for_back_velocity = 0
 
-            logger.afp_debug("fb: " + str(for_back_velocity))
-            logger.afp_debug("lr: " + str(left_right_velocity))
-            cmdUavRunOnce(FlightCmdService, CmdEnum.send_rc_control, [left_right_velocity, for_back_velocity,
-                                                                      up_down_velocity, yaw_velocity])
+            if not canLanding:
+                cmdUavRunOnce(FlightCmdService, CmdEnum.send_rc_control, [left_right_velocity, for_back_velocity,
+                                                                          up_down_velocity, yaw_velocity])
+            else:
+                cmdUavRunOnce(FlightCmdService, CmdEnum.send_rc_control, [left_right_velocity, for_back_velocity,
+                                                                          up_down_velocity, yaw_velocity])
+                # 已經對準到可以下降的狀況，進行下降
+                now_height = uavGetInfo(CmdEnum.get_distance_tof, FlightCmdService)
+                logger.afp_debug("now_height: " + str(now_height))
+                frameSharedVar.landHeight = now_height
+                move_down_cm = 0
+
+                # 檢查高度來決定下降方式
+                if 20 <= now_height <= 30:
+                    # 如果高度已經在 20 ~ 30 cm 之間，直接下降
+                    cmdUavRunOnce(FlightCmdService, CmdEnum.land, 0)
+                    pass
+                else:
+                    # 否則，先降低一點高度
+                    if now_height // 2 > 20:
+                        move_down_cm = int(now_height - now_height // 2)
+                    else:
+                        move_down_cm = int(now_height - 20)
+                logger.afp_debug("move_down_cm: " + str(move_down_cm))
+                cmdUavRunOnce(FlightCmdService, CmdEnum.move_down, move_down_cm)
+
+                canLanding = False
+
         elif afStateService.getState() == AutoFlightState.LANDED:
             pass
         elif afStateService.getState() == AutoFlightState.END:
             pass
         elif afStateService.getState() == AutoFlightState.TEST_MODE:
-            print("frameWidth: ", frameWidth)
-            print("frameHeight: ", frameHeight)
+            last_height = uavGetInfo(CmdEnum.get_distance_tof, FlightCmdService)
+            logger.afp_debug("height: " + str(last_height))
 
     logger.afp_info("AutoFlightProcess End")
     # Stop frameSendWorker

@@ -14,6 +14,11 @@ def ControllerProcess(telloFrameShared, OSStateService, FlightCmdService):
     tello = Tello()
     tello.connect()
 
+    """ log Tello Info
+    """
+    logger.ctrp_info("battery: " + str(tello.get_battery()))
+    logger.ctrp_info("temperature: " + str(tello.get_temperature()))
+
     """ stream
     """
     tello.streamoff()
@@ -94,6 +99,8 @@ def telloCmdPopRunner(FlightCmdService, tello):
         tello.move_left(cmd['value'])
     elif cmd['cmd'] == CmdEnum.move_right:
         tello.move_right(cmd['value'])
+    elif cmd['cmd'] == CmdEnum.move_down:
+        tello.move_down(cmd['value'])
     elif cmd['cmd'] == CmdEnum.land:
         tello.land()
     elif cmd['cmd'] == CmdEnum.send_rc_control:
