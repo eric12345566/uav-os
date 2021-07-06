@@ -23,7 +23,7 @@ if __name__ == '__main__':
     '''
     BaseManager.register('frameClass', FrameClass)
     BaseManager.register('osStateService', OSStateService)
-    BaseManager.register('flightCmdService', FlightCmdService)
+    # BaseManager.register('flightCmdService', FlightCmdService)
     manager = BaseManager()
     manager.start()
 
@@ -31,7 +31,7 @@ if __name__ == '__main__':
     '''
     frameService = manager.frameClass()
     osStateService = manager.osStateService()
-    flightCmdService = manager.flightCmdService()
+    # flightCmdService = manager.flightCmdService()
 
     '''OS環境變數：test 狀態下不會啟動 Tello 與 openCV
         **目前所有測試，請使用Tello進行，不開放test模式**
@@ -40,10 +40,10 @@ if __name__ == '__main__':
 
     ''' 執行緒創建
     '''
-    afpProcess = mp.Process(target=afp.AutoFlightProcess, args=(frameService, osStateService, flightCmdService,))
+    afpProcess = mp.Process(target=afp.AutoFlightProcess, args=(frameService, osStateService,))
 
     if osStateService.getMode() != "test":
-        frameProcess = mp.Process(target=fp.FrameProcess, args=(frameService, osStateService, flightCmdService,))
+        frameProcess = mp.Process(target=fp.FrameProcess, args=(frameService, osStateService,))
     else:
         frameProcess = mp.Process(target=fp.FrameProcessTest, args=(frameService, osStateService,))
 

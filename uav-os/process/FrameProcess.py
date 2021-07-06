@@ -1,13 +1,9 @@
 import cv2 as cv
 import time
-from State.OSStateEnum import OSState
-from State.FlightStateEnum import FlightState
 from service.LoggerService import LoggerService
-from State.CmdEnum import CmdEnum
-from module.BackgroundFrameRead import BackgroundFrameRead
 
 
-def FrameProcess(FrameService, OSStateService, FlightCmdService):
+def FrameProcess(FrameService, OSStateService):
     """ 顯示Frame用，主要使用 cv.imshow() 顯示 frame
     """
     logger = LoggerService()
@@ -26,7 +22,6 @@ def FrameProcess(FrameService, OSStateService, FlightCmdService):
 
         cv.imshow('frame', frame)
         if cv.waitKey(1) & 0xFF == ord('q'):
-            FlightCmdService.forceLand()
             break
     cv.destroyAllWindows()
     logger.fp_debug("End")
