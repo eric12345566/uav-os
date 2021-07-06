@@ -2,7 +2,7 @@ import time
 import numpy as np
 import cv2 as cv
 from simple_pid import PID
-from threading import Thread
+from djitellopy import Tello
 from State.OSStateEnum import OSState
 from State.FlightStateEnum import FlightState
 from State.CmdEnum import CmdEnum
@@ -118,12 +118,20 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
 
 
 def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
-    # Wait for Controller Ready, and get the frame
-    while not OSStateService.getControllerInitState():
-        pass
+    # <Deprecated: 拋棄 Controller Process> Wait for Controller Ready, and get the frame
+    # while not OSStateService.getControllerInitState():
+    #     pass
+
+    # init Tello object
+    tello = Tello()
+    tello.connect()
+
+    # stream
+    tello.streamoff()
+    tello.streamon()
 
     # Get Frame from UDP using BackgroundFrameRead class (thread)
-    telloUDPAddr = FrameService.getAddress()
+    telloUDPAddr = tello.get_udp_video_address()
     telloFrameBFR = BackgroundFrameRead(telloUDPAddr)
     telloFrameBFR.start()
 
@@ -158,9 +166,9 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
     """ Global Var
     """
     # Auto Landing
-    lrPID = PID(0.3, 0.0001, 0.1)
+    lrPID = PID(0.35, 0.0001, 0.1)
     lrPID.output_limits = (-100, 100)
-    fbPID = PID(0.3, 0.0001, 0.1)
+    fbPID = PID(0.35, 0.0001, 0.1)
     fbPID.output_limits = (-100, 100)
     for_back_velocity = 0
     left_right_velocity = 0
@@ -177,14 +185,15 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
         frameHeight, frameWidth, _ = frame.shape
 
         # Force Landing Handler
-        if FlightCmdService.currentState() == FlightState.FORCE_LAND:
-            logger.afp_warning("Force Land commit, System Shutdown")
-            break
+        # if FlightCmdService.currentState() == FlightState.FORCE_LAND:
+        #     logger.afp_warning("Force Land commit, System Shutdown")
+        #     break
 
         # Auto Flight State Controller
         if afStateService.getState() == AutoFlightState.READY_TAKEOFF:
             # Take Off
-            cmdUavRunOnce(FlightCmdService, CmdEnum.takeoff, 0)
+            # cmdUavRunOnce(FlightCmdService, CmdEnum.takeoff, 0)
+            tello.takeoff()
             afStateService.autoLanding()
         elif afStateService.getState() == AutoFlightState.AUTO_LANDING:
             # Landing procedure
@@ -227,13 +236,16 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
                 for_back_velocity = 0
 
             if not canLanding:
-                cmdUavRunOnce(FlightCmdService, CmdEnum.send_rc_control, [left_right_velocity, for_back_velocity,
-                                                                          up_down_velocity, yaw_velocity])
+                # cmdUavRunOnce(FlightCmdService, CmdEnum.send_rc_control, [left_right_velocity, for_back_velocity,
+                #                                                           up_down_velocity, yaw_velocity])
+                tello.send_rc_control(left_right_velocity, for_back_velocity, up_down_velocity, yaw_velocity)
             else:
-                cmdUavRunOnce(FlightCmdService, CmdEnum.send_rc_control, [left_right_velocity, for_back_velocity,
-                                                                          up_down_velocity, yaw_velocity])
+                # cmdUavRunOnce(FlightCmdService, CmdEnum.send_rc_control, [left_right_velocity, for_back_velocity,
+                #                                                           up_down_velocity, yaw_velocity])
+                tello.send_rc_control(left_right_velocity, for_back_velocity, up_down_velocity, yaw_velocity)
                 # 已經對準到可以下降的狀況，進行下降
-                now_height = uavGetInfo(CmdEnum.get_distance_tof, FlightCmdService)
+                # now_height = uavGetInfo(CmdEnum.get_distance_tof, FlightCmdService)
+                now_height = tello.get_distance_tof()
                 logger.afp_debug("now_height: " + str(now_height))
                 frameSharedVar.landHeight = now_height
                 move_down_cm = 0
@@ -241,22 +253,26 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
                 # 檢查高度來決定下降方式
                 if 20 <= now_height <= 30:
                     # 如果高度已經在 20 ~ 30 cm 之間，直接下降
-                    cmdUavRunOnce(FlightCmdService, CmdEnum.land, 0)
+                    # cmdUavRunOnce(FlightCmdService, CmdEnum.land, 0)
+                    tello.land()
                     afStateService.landed()
                 else:
                     # 否則，先降低一點高度
                     if now_height // 2 > 30:
                         move_down_cm = int(now_height - now_height // 2)
                         logger.afp_debug("move_down_cm: " + str(move_down_cm))
-                        cmdUavRunOnce(FlightCmdService, CmdEnum.move_down, move_down_cm)
+                        # cmdUavRunOnce(FlightCmdService, CmdEnum.move_down, move_down_cm)
+                        tello.move_down(move_down_cm)
                     else:
                         move_down_cm = int(now_height - 30)
                         if move_down_cm < 20:
-                            cmdUavRunOnce(FlightCmdService, CmdEnum.land, 0)
+                            # cmdUavRunOnce(FlightCmdService, CmdEnum.land, 0)
+                            tello.land()
                             afStateService.landed()
                         else:
                             logger.afp_debug("move_down_cm: " + str(move_down_cm))
-                            cmdUavRunOnce(FlightCmdService, CmdEnum.move_down, move_down_cm)
+                            # cmdUavRunOnce(FlightCmdService, CmdEnum.move_down, move_down_cm)
+                            tello.move_down(move_down_cm)
 
                 canLanding = False
 
@@ -267,9 +283,9 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
         elif afStateService.getState() == AutoFlightState.END:
             pass
         elif afStateService.getState() == AutoFlightState.TEST_MODE:
-            last_height = uavGetInfo(CmdEnum.get_distance_tof, FlightCmdService)
-            logger.afp_debug("height: " + str(last_height))
+            pass
 
     logger.afp_info("AutoFlightProcess End")
+
     # Stop frameSendWorker
     frameSendWorker.join()

@@ -43,28 +43,28 @@ if __name__ == '__main__':
     afpProcess = mp.Process(target=afp.AutoFlightProcess, args=(frameService, osStateService, flightCmdService,))
 
     if osStateService.getMode() != "test":
-        frameProcess = mp.Process(target=fp.FrameProcess, args=(frameService, osStateService,flightCmdService,))
+        frameProcess = mp.Process(target=fp.FrameProcess, args=(frameService, osStateService, flightCmdService,))
     else:
         frameProcess = mp.Process(target=fp.FrameProcessTest, args=(frameService, osStateService,))
 
-    if osStateService.getMode() != "test":
-        # print("dev")
-        ctrProcess = mp.Process(target=ctrp.ControllerProcess, args=(frameService, osStateService, flightCmdService,))
-    else:
-        # print("test")
-        ctrProcess = mp.Process(target=ctrp.controllerProcessDummy, args=(frameService, osStateService,
-                                                                          flightCmdService,))
+    # if osStateService.getMode() != "test":
+    #     # print("dev")
+    #     ctrProcess = mp.Process(target=ctrp.ControllerProcess, args=(frameService, osStateService, flightCmdService,))
+    # else:
+    #     # print("test")
+    #     ctrProcess = mp.Process(target=ctrp.controllerProcessDummy, args=(frameService, osStateService,
+    #                                                                       flightCmdService,))
     ''' 開始執行緒
     '''
     afpProcess.start()
     frameProcess.start()
-    ctrProcess.start()
+    # ctrProcess.start()
 
     ''' 結束執行緒
     '''
     afpProcess.join()
     frameProcess.join()
-    ctrProcess.join()
+    # ctrProcess.join()
 
     endTime = time.time()
 
