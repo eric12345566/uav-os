@@ -39,22 +39,25 @@ def ControllerProcess(telloFrameShared, OSStateService, FlightCmdService):
             if FlightCmdService.currentState() == FlightState.READY_FOR_CMD:
                 """ READY_FOR_CMD
                 """
-                pass
+                logger.ctrp_debug("CTR ready")
+                FlightCmdService.readyInit()
             elif FlightCmdService.currentState() == FlightState.INPUT_CMD:
                 """ INPUT_CMD
                 """
+                logger.ctrp_debug("CTR input")
                 pass
             elif FlightCmdService.currentState() == FlightState.RUNNING_CMD:
                 """ RUNNING_CMD
                 """
-                # logger.ctrp_debug("RUN CMD")
+                logger.ctrp_debug("Controller Run Cmd")
                 telloCmdPopRunner(FlightCmdService, tello)
                 if FlightCmdService.isCmdRunAllComplete() and FlightCmdService.currentState() != FlightState.FORCE_LAND:
                     FlightCmdService.controller_CmdDone()
-                    # logger.ctrp_debug("CMD DONE")
+                    logger.ctrp_debug("CMD DONE")
             elif FlightCmdService.currentState() == FlightState.GET_INFO:
                 """ GET_INFO
                 """
+                logger.ctrp_debug("CTR Get info")
                 telloGetInfoRunner(FlightCmdService, tello)
             elif FlightCmdService.currentState() == FlightState.FORCE_LAND:
                 """ FORCE_LAND
@@ -64,6 +67,7 @@ def ControllerProcess(telloFrameShared, OSStateService, FlightCmdService):
             elif FlightCmdService.currentState() == FlightState.DONE:
                 """ DONE
                 """
+                logger.ctrp_debug("CTR Done")
                 FlightCmdService.controller_StateBackToReady()
 
 

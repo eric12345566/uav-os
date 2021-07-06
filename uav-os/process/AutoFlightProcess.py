@@ -55,30 +55,36 @@ def cmdUavRunOnce(FlightCmdService, cmd, value):
 
     while True:
         if FlightCmdService.currentState() == FlightState.READY_FOR_CMD:
-            # logger.afp_debug("CTR READY")
+            logger.afp_debug("AFP Ready for Cmd")
             if FlightCmdService.registerInputCmdProcess("autoP"):
-                # logger.afp_debug("register Ctr Process Success")
+                logger.afp_debug("AFP register Ctr Process Success")
                 pass
             else:
-                # logger.afp_debug("register Ctr Process Fail, try again..")
+                logger.afp_debug("AFP register Ctr Process Fail, try again..")
                 time.sleep(0.5)
         elif FlightCmdService.currentState() == FlightState.INPUT_CMD:
+            logger.afp_debug("AFP Run command: " + str(cmd) + ", value: " + str(value))
             FlightCmdService.cmdRunOnce(cmd, value)
             FlightCmdService.startRunCmd()
         elif FlightCmdService.currentState() == FlightState.RUNNING_CMD:
             alreadyRunOnce = True
         elif FlightCmdService.currentState() == FlightState.FORCE_LAND:
-            # logger.afp_debug("cmd Force Landing")
+            logger.afp_debug("cmd Force Landing")
             break
         elif FlightCmdService.currentState() == FlightState.DONE:
+            logger.afp_debug("AFP Done")
+            FlightCmdService.afp_StateBackToReady()
             if alreadyRunOnce:
                 break
 
 
 def uavGetInfo(infoCmd, FlightCmdService):
+    logger.afp_debug("AFP get info start")
     FlightCmdService.runUavInfoCmd(infoCmd)
+    logger.afp_debug("Flight State: " + str(FlightCmdService.currentState()))
     while FlightCmdService.currentState() == FlightState.GET_INFO:
         pass
+    logger.afp_debug("AFP get info End")
     return FlightCmdService.getUavInfoValue()
 
 
@@ -141,16 +147,17 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
     while OSStateService.getCurrentState() == OSState.INITIALIZING:
         pass
 
-    """ Main 主程式
+    """ State
     """
-    # State
     afStateService = AutoFlightStateService()
 
     afStateService.readyTakeOff()
     # TEST_MODE
     # afStateService.testMode()
 
-    # Global Var
+    """ Global Var
+    """
+    # Auto Landing
     lrPID = PID(0.3, 0.0001, 0.1)
     lrPID.output_limits = (-100, 100)
     fbPID = PID(0.3, 0.0001, 0.1)
@@ -160,6 +167,9 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
     up_down_velocity = 0
     yaw_velocity = 0
     canLanding = False
+
+    """ Main 主程式
+    """
     while True:
         # Process frame
         frame = telloFrameBFR.frame
@@ -208,7 +218,7 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
                 frameSharedVar.setFbPID(for_back_velocity)
 
                 # 偵測是否可以下降
-                if abs(fbError) < 30 and abs(lrError) < 30:
+                if abs(fbError) < 20 and abs(lrError) < 20:
                     canLanding = True
                     for_back_velocity = 0
                     left_right_velocity = 0
@@ -232,19 +242,27 @@ def AutoFlightProcess(FrameService, OSStateService, FlightCmdService):
                 if 20 <= now_height <= 30:
                     # 如果高度已經在 20 ~ 30 cm 之間，直接下降
                     cmdUavRunOnce(FlightCmdService, CmdEnum.land, 0)
-                    pass
+                    afStateService.landed()
                 else:
                     # 否則，先降低一點高度
-                    if now_height // 2 > 20:
+                    if now_height // 2 > 30:
                         move_down_cm = int(now_height - now_height // 2)
+                        logger.afp_debug("move_down_cm: " + str(move_down_cm))
+                        cmdUavRunOnce(FlightCmdService, CmdEnum.move_down, move_down_cm)
                     else:
-                        move_down_cm = int(now_height - 20)
-                logger.afp_debug("move_down_cm: " + str(move_down_cm))
-                cmdUavRunOnce(FlightCmdService, CmdEnum.move_down, move_down_cm)
+                        move_down_cm = int(now_height - 30)
+                        if move_down_cm < 20:
+                            cmdUavRunOnce(FlightCmdService, CmdEnum.land, 0)
+                            afStateService.landed()
+                        else:
+                            logger.afp_debug("move_down_cm: " + str(move_down_cm))
+                            cmdUavRunOnce(FlightCmdService, CmdEnum.move_down, move_down_cm)
 
                 canLanding = False
 
         elif afStateService.getState() == AutoFlightState.LANDED:
+            logger.afp_debug("State: Landed")
+            afStateService.end()
             pass
         elif afStateService.getState() == AutoFlightState.END:
             pass
