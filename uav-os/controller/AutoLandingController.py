@@ -63,15 +63,10 @@ def autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, 
             for_back_velocity = 0
 
         if not canLanding:
-            # cmdUavRunOnce(FlightCmdService, CmdEnum.send_rc_control, [left_right_velocity, for_back_velocity,
-            #                                                           up_down_velocity, yaw_velocity])
             tello.send_rc_control(left_right_velocity, for_back_velocity, up_down_velocity, yaw_velocity)
         else:
-            # cmdUavRunOnce(FlightCmdService, CmdEnum.send_rc_control, [left_right_velocity, for_back_velocity,
-            #                                                           up_down_velocity, yaw_velocity])
             tello.send_rc_control(left_right_velocity, for_back_velocity, up_down_velocity, yaw_velocity)
             # 已經對準到可以下降的狀況，進行下降
-            # now_height = uavGetInfo(CmdEnum.get_distance_tof, FlightCmdService)
             now_height = tello.get_distance_tof()
             logger.afp_debug("now_height: " + str(now_height))
             frameSharedVar.landHeight = now_height
@@ -80,7 +75,6 @@ def autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, 
             # 檢查高度來決定下降方式
             if 20 <= now_height <= 30:
                 # 如果高度已經在 20 ~ 30 cm 之間，直接下降
-                # cmdUavRunOnce(FlightCmdService, CmdEnum.land, 0)
                 tello.land()
                 afStateService.landed()
                 break
@@ -89,18 +83,15 @@ def autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, 
                 if now_height // 2 > 30:
                     move_down_cm = int(now_height - now_height // 2)
                     logger.afp_debug("move_down_cm: " + str(move_down_cm))
-                    # cmdUavRunOnce(FlightCmdService, CmdEnum.move_down, move_down_cm)
                     tello.move_down(move_down_cm)
                 else:
                     move_down_cm = int(now_height - 30)
                     if move_down_cm < 20:
-                        # cmdUavRunOnce(FlightCmdService, CmdEnum.land, 0)
                         tello.land()
                         afStateService.landed()
                         break
                     else:
                         logger.afp_debug("move_down_cm: " + str(move_down_cm))
-                        # cmdUavRunOnce(FlightCmdService, CmdEnum.move_down, move_down_cm)
                         tello.move_down(move_down_cm)
 
             canLanding = False
