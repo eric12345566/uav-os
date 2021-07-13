@@ -17,7 +17,7 @@ def autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, 
     yaw_velocity = 0
     canLanding = False
 
-    testMode = False
+    testMode = True
 
     # Landing procedure
     while True:
@@ -43,7 +43,6 @@ def autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, 
             x_centerPixel = x_sum * .25
             y_centerPixel = y_sum * .25
             # logger.afp_debug("x_c: " + str(x_centerPixel) + ",y_c: " + str(y_centerPixel))
-
             # 讓飛機對準降落點
 
             # left-right
@@ -76,9 +75,11 @@ def autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, 
             frameSharedVar.setFbError(fbError)
             frameSharedVar.setFbPID(for_back_velocity)
 
+            # 計算 ArUco Marker 中心點到其點的
+
             # 偵測是否可以下降
             if abs(fbError) < 20 and abs(lrError) < 20:
-                canLanding = True
+                # canLanding = True
                 for_back_velocity = 0
                 left_right_velocity = 0
         else:

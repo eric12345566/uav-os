@@ -28,6 +28,26 @@ def arucoTrackWriteFrame(matrix_coefficients, distortion_coefficients, frame):
             x_sum = corners[0][0][0][0] + corners[0][0][1][0] + corners[0][0][2][0] + corners[0][0][3][0]
             y_sum = corners[0][0][0][1] + corners[0][0][1][1] + corners[0][0][2][1] + corners[0][0][3][1]
 
+            # 四個角標點
+            frame = cv2.circle(frame, (int(corners[0][0][0][0]), int(corners[0][0][0][1])), 5, (255, 255, 0), -1)
+            frame = cv2.circle(frame, (int(corners[0][0][1][0]), int(corners[0][0][1][1])), 5, (255, 255, 0), -1)
+            frame = cv2.circle(frame, (int(corners[0][0][2][0]), int(corners[0][0][2][1])), 5, (255, 255, 0), -1)
+            frame = cv2.circle(frame, (int(corners[0][0][3][0]), int(corners[0][0][3][1])), 5, (255, 255, 0), -1)
+
+            # 標上四個點座標
+            xy = "%d,%d" % (corners[0][0][0][0], corners[0][0][0][1])
+            frame = cv2.putText(frame, xy, (int(corners[0][0][0][0]), int(corners[0][0][0][1])), cv2.FONT_HERSHEY_PLAIN, 3,
+                                (255, 255, 0), thickness=2)
+            xy = "%d,%d" % (corners[0][0][1][0], corners[0][0][1][1])
+            frame = cv2.putText(frame, xy, (int(corners[0][0][1][0]), int(corners[0][0][1][1])), cv2.FONT_HERSHEY_PLAIN, 3,
+                                (255, 255, 0), thickness=2)
+            xy = "%d,%d" % (corners[0][0][2][0], corners[0][0][2][1])
+            frame = cv2.putText(frame, xy, (int(corners[0][0][2][0]), int(corners[0][0][2][1])), cv2.FONT_HERSHEY_PLAIN, 3,
+                                (255, 255, 0), thickness=2)
+            xy = "%d,%d" % (corners[0][0][3][0], corners[0][0][3][1])
+            frame = cv2.putText(frame, xy, (int(corners[0][0][3][0]), int(corners[0][0][3][1])), cv2.FONT_HERSHEY_PLAIN, 3,
+                                (255, 255, 0), thickness=2)
+
             _x_centerPixel = x_sum * .25
             _y_centerPixel = y_sum * .25
             centerX = int(_x_centerPixel)
