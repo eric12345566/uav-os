@@ -36,8 +36,19 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
 
         # test Add frame
         frame = cv.flip(frame, 1)
+        frameHeight, frameWidth, _ = frame.shape
+
         # markedFrame = arucoMarkerDetectFrame(frame)
-        arucoTrackWriteFrame(cameraCalibArr[0], cameraCalibArr[1], frame)
+        markCenterX, markCenterY = arucoTrackWriteFrame(cameraCalibArr[0], cameraCalibArr[1], frame)
+
+        # Center point of frame
+        centerX = frameWidth // 2
+        centerY = frameHeight // 2
+        frame_center = (centerX, centerY)
+        cv.circle(frame, center=(centerX, centerY), radius=5, color=(0, 0, 255), thickness=-1)
+
+        # Draw Line from frame center to AruCo center
+        cv.arrowedLine(frame, frame_center, (markCenterX, markCenterY), color=(0, 255, 0), thickness=2)
 
         # Put some text into frame
         cv.putText(frame, f"X Error: {frameSharedVar.getLrError()} PID: {frameSharedVar.getLrPID():.2f}", (20, 30),
@@ -45,7 +56,7 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
                    (0, 255, 0), 2, cv.LINE_AA)
         cv.putText(frame, f"Y Error: {frameSharedVar.getFbError()} PID: {frameSharedVar.getFbPID():.2f}", (20, 70),
                    cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
-        cv.putText(frame, f"Land Height: {frameSharedVar.landHeight}", (20, 110),
+        cv.putText(frame, f"Now Height: {frameSharedVar.landHeight}", (20, 110),
                    cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
 
         # Send frame to FrameProcess
@@ -65,6 +76,10 @@ def AutoFlightProcess(FrameService, OSStateService):
     # init Tello object
     tello = Tello()
     tello.connect()
+
+    # Tello Info
+    logger.ctrp_info("battery: " + str(tello.get_battery()))
+    logger.ctrp_info("temperature: " + str(tello.get_temperature()))
 
     # stream
     tello.streamoff()
@@ -106,9 +121,9 @@ def AutoFlightProcess(FrameService, OSStateService):
     """ Global Var
     """
     # Auto Landing
-    lrPID = PID(0.35, 0.0001, 0.1)
+    lrPID = PID(0.30, 0.0001, 0.1)
     lrPID.output_limits = (-100, 100)
-    fbPID = PID(0.35, 0.0001, 0.1)
+    fbPID = PID(0.30, 0.0001, 0.1)
     fbPID.output_limits = (-100, 100)
     for_back_velocity = 0
     left_right_velocity = 0
@@ -134,6 +149,7 @@ def AutoFlightProcess(FrameService, OSStateService):
             # Take Off
             # cmdUavRunOnce(FlightCmdService, CmdEnum.takeoff, 0)
             tello.takeoff()
+            now_height = tello.get_distance_tof()
             afStateService.autoLanding()
         elif afStateService.getState() == AutoFlightState.AUTO_LANDING:
             # Landing procedure
@@ -145,7 +161,8 @@ def AutoFlightProcess(FrameService, OSStateService):
         elif afStateService.getState() == AutoFlightState.END:
             pass
         elif afStateService.getState() == AutoFlightState.TEST_MODE:
-            pass
+            # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger)
+            tello.send_rc_control(0, 0, 0, 0)
 
     logger.afp_info("AutoFlightProcess End")
 

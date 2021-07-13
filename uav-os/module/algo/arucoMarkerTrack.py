@@ -4,6 +4,9 @@ import numpy as np
 
 
 def arucoTrackWriteFrame(matrix_coefficients, distortion_coefficients, frame):
+    centerX = 0
+    centerY = 0
+
     # operations on the frame come here
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # Change grayscale
     aruco_dict = aruco.Dictionary_get(aruco.DICT_5X5_250)  # Use 5x5 dictionary to find markers
@@ -27,9 +30,10 @@ def arucoTrackWriteFrame(matrix_coefficients, distortion_coefficients, frame):
 
             _x_centerPixel = x_sum * .25
             _y_centerPixel = y_sum * .25
-
+            centerX = int(_x_centerPixel)
+            centerY = int(_y_centerPixel)
             frame = cv2.circle(frame, (int(_x_centerPixel), int(_y_centerPixel)), 5, (255, 0, 0), -1)
 
         aruco.drawDetectedMarkers(frame, corners)  # Draw A square around the markers
         aruco.drawAxis(frame, matrix_coefficients, distortion_coefficients, rvec, tvec, 0.01)  # Draw Axis
-    return frame
+    return centerX, centerY
