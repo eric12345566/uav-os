@@ -30,3 +30,28 @@ def arucoMarkerDetectFrame(frame):
     frame = aruco.drawDetectedMarkers(frame, _corners)
 
     return frame
+
+def arucoMarkerDetectFrameTest(frame):
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    aruco_dict = aruco.Dictionary_get(aruco.DICT_5X5_1000)
+    arucoParameters = aruco.DetectorParameters_create()
+    _corners, _ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=arucoParameters)
+
+    if np.all(_ids is not None):
+        # print(_ids)
+        x_sum = _corners[0][0][0][0] + _corners[0][0][1][0] + _corners[0][0][2][0] + _corners[0][0][3][0]
+        y_sum = _corners[0][0][0][1] + _corners[0][0][1][1] + _corners[0][0][2][1] + _corners[0][0][3][1]
+
+        rect = np.array(_corners)
+        rect = rect.reshape([4, 1, 2]).astype(np.int64)
+        print(rect)
+        dist = cv2.pointPolygonTest(rect, (463, 1663), False)
+        print(dist)
+
+        _x_centerPixel = x_sum * .25
+        _y_centerPixel = y_sum * .25
+        frame = cv2.circle(frame, (int(_x_centerPixel), int(_y_centerPixel)), 5, (255, 0, 0), 5)
+
+    frame = aruco.drawDetectedMarkers(frame, _corners)
+
+    return frame

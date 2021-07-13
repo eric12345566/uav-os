@@ -39,7 +39,7 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
         frameHeight, frameWidth, _ = frame.shape
 
         # markedFrame = arucoMarkerDetectFrame(frame)
-        markCenterX, markCenterY = arucoTrackWriteFrame(cameraCalibArr[0], cameraCalibArr[1], frame)
+        markCenterX, markCenterY, frameCetInMarker = arucoTrackWriteFrame(cameraCalibArr[0], cameraCalibArr[1], frame)
 
         # Center point of frame
         centerX = frameWidth // 2
@@ -57,6 +57,8 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
         cv.putText(frame, f"Y Error: {frameSharedVar.getFbError()} PID: {frameSharedVar.getFbPID():.2f}", (20, 70),
                    cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
         cv.putText(frame, f"Now Height: {frameSharedVar.landHeight}", (20, 110),
+                   cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
+        cv.putText(frame, f"isCenterIn: {frameCetInMarker}", (20, 150),
                    cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
 
         # Send frame to FrameProcess
