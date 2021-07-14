@@ -31,6 +31,7 @@ def arucoMarkerDetectFrame(frame):
 
     return frame
 
+
 def arucoMarkerDetectFrameTest(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     aruco_dict = aruco.Dictionary_get(aruco.DICT_5X5_1000)

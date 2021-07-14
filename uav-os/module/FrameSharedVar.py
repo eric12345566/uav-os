@@ -6,6 +6,7 @@ class FrameSharedVar:
         self.fbError = 0
         self.fbPID = 0
         self.landHeight = 0
+        self.isFrameCenterInMarker = -2
 
     """ LrError & LrPID
     """

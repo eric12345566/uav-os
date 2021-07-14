@@ -13,13 +13,13 @@ def arucoTrackWriteFrame(matrix_coefficients, distortion_coefficients, frame):
     centerY = frameHeight // 2
 
     # 是否frame的中心點在marker方框中
-    isFrameCenterInMarker = -2
+    # isFrameCenterInMarker = -2
 
     # operations on the frame come here
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # Change grayscale
     aruco_dict = aruco.Dictionary_get(aruco.DICT_5X5_250)  # Use 5x5 dictionary to find markers
     parameters = aruco.DetectorParameters_create()  # Marker detection parameters
-    # lists of ids and the corners beloning to each id
+    # lists of ids and the corners belonging to each id
     corners, ids, rejected_img_points = aruco.detectMarkers(gray, aruco_dict,
                                                             parameters=parameters,
                                                             cameraMatrix=matrix_coefficients,
@@ -57,9 +57,9 @@ def arucoTrackWriteFrame(matrix_coefficients, distortion_coefficients, frame):
                                 (255, 255, 0), thickness=2)
 
             # 檢查 frame 中心點有沒有在 ArUco Marker 方框內
-            rect = np.array(corners)
-            rect = rect.reshape([4, 1, 2]).astype(np.int64)
-            isFrameCenterInMarker = cv2.pointPolygonTest(rect, (centerX, centerY), False)
+            # rect = np.array(corners)
+            # rect = rect.reshape([4, 1, 2]).astype(np.int64)
+            # isFrameCenterInMarker = cv2.pointPolygonTest(rect, (centerX, centerY), False)
 
             _x_centerPixel = x_sum * .25
             _y_centerPixel = y_sum * .25
@@ -69,4 +69,4 @@ def arucoTrackWriteFrame(matrix_coefficients, distortion_coefficients, frame):
 
         aruco.drawDetectedMarkers(frame, corners)  # Draw A square around the markers
         aruco.drawAxis(frame, matrix_coefficients, distortion_coefficients, rvec, tvec, 0.01)  # Draw Axis
-    return centerX, centerY, isFrameCenterInMarker
+    return centerX, centerY
