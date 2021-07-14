@@ -1,3 +1,5 @@
+import time
+
 from simple_pid import PID
 import numpy as np
 import cv2 as cv
@@ -17,7 +19,11 @@ def autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, 
     yaw_velocity = 0
     canLanding = False
 
-    testMode = True
+    # 降落計時用
+    landingStartTime = 0
+    LandAlreadyRecord = False
+
+    testMode = False
 
     # Landing procedure
     while True:
@@ -88,10 +94,33 @@ def autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, 
             isFrameCenterInMarker = cv.pointPolygonTest(rect, (centerX, centerY), False)
 
             # 偵測是否可以下降
-            if abs(fbError) < 20 and abs(lrError) < 20:
-                # canLanding = True
+            # if abs(fbError) < 20 and abs(lrError) < 20:
+            #     # canLanding = True
+            #     for_back_velocity = 0
+            #     left_right_velocity = 0
+
+            # 若中心點在方框內，則開始降落計時
+            if isFrameCenterInMarker >= 0 and not LandAlreadyRecord:
+                # 如果在中心點框內且尚未計時過，則開始計時
+                landingStartTime = time.time()
+                LandAlreadyRecord = True
+                logger.afp_debug("Landing Timer Start")
+            elif isFrameCenterInMarker == -1 and LandAlreadyRecord:
+                # 如果已經在計時但離開了框框，則取消計時
+                landingStartTime = 0
+                LandAlreadyRecord = False
+                logger.afp_debug("Landing Timer Stop")
+
+            # 如果中心點在方框內達到一定時間，則下降
+            if LandAlreadyRecord and time.time() - landingStartTime >= 1.0:
+                logger.afp_debug("Time up, Can Landing!")
+                LandAlreadyRecord = False
+                landingStartTime = 0
+
+                canLanding = True
                 for_back_velocity = 0
                 left_right_velocity = 0
+
         else:
             # 否則，嘗試盲找降落點
             left_right_velocity = 0

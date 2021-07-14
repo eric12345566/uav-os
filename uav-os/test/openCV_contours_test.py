@@ -1,12 +1,7 @@
-import numpy as np
-import cv2 as cv
-from module.algo.arucoMarkerDetect import arucoMarkerDetectFrameTest
+import time
 
-frame = cv.imread('contours_test.jpg')
+startTime = time.time()
+time.sleep(5)
+endTime = time.time()
 
-frame = arucoMarkerDetectFrameTest(frame)
-
-cv.imshow('test', frame)
-cv.waitKey(0)
-cv.destroyAllWindows()
-
+print(int(endTime - startTime))

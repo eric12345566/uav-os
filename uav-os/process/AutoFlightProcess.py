@@ -116,9 +116,9 @@ def AutoFlightProcess(FrameService, OSStateService):
     """
     afStateService = AutoFlightStateService()
 
-    # afStateService.readyTakeOff()
+    afStateService.readyTakeOff()
     # TEST_MODE
-    afStateService.testMode()
+    # afStateService.testMode()
 
     """ Global Var
     """
@@ -151,7 +151,6 @@ def AutoFlightProcess(FrameService, OSStateService):
             # Take Off
             # cmdUavRunOnce(FlightCmdService, CmdEnum.takeoff, 0)
             tello.takeoff()
-            tello.move_down(20)
             afStateService.autoLanding()
         elif afStateService.getState() == AutoFlightState.AUTO_LANDING:
             # Landing procedure
