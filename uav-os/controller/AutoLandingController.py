@@ -99,6 +99,11 @@ def autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, 
             #     for_back_velocity = 0
             #     left_right_velocity = 0
 
+            # 若中心點在方框內，飛機降速
+            if isFrameCenterInMarker == 1:
+                left_right_velocity = 0
+                for_back_velocity = 0
+
             # 若中心點在方框內，則開始降落計時
             if isFrameCenterInMarker >= 0 and not LandAlreadyRecord:
                 # 如果在中心點框內且尚未計時過，則開始計時
@@ -111,8 +116,8 @@ def autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, 
                 LandAlreadyRecord = False
                 logger.afp_debug("Landing Timer Stop")
 
-            # 如果中心點在方框內達到一定時間，則下降
-            if LandAlreadyRecord and time.time() - landingStartTime >= 1.0:
+            # 如果中心點在方框內達到一定時間，則下降（時間以秒計算）
+            if LandAlreadyRecord and time.time() - landingStartTime >= 2:
                 logger.afp_debug("Time up, Can Landing!")
                 LandAlreadyRecord = False
                 landingStartTime = 0
@@ -127,6 +132,8 @@ def autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, 
             up_down_velocity = 0
             for_back_velocity = 0
             isFrameCenterInMarker = -2
+            LandAlreadyRecord = False
+            landingStartTime = 0
 
         # 將 isFrameCenterInMarker 分享給 FrameWorker
         frameSharedVar.isFrameCenterInMarker = isFrameCenterInMarker

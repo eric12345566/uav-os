@@ -152,6 +152,7 @@ def AutoFlightProcess(FrameService, OSStateService):
             # cmdUavRunOnce(FlightCmdService, CmdEnum.takeoff, 0)
             tello.takeoff()
             afStateService.autoLanding()
+            # afStateService.testMode()
         elif afStateService.getState() == AutoFlightState.AUTO_LANDING:
             # Landing procedure
             autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger)
@@ -162,8 +163,8 @@ def AutoFlightProcess(FrameService, OSStateService):
         elif afStateService.getState() == AutoFlightState.END:
             pass
         elif afStateService.getState() == AutoFlightState.TEST_MODE:
-            autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger)
-            # tello.send_rc_control(0, 0, 0, 0)
+            # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger)
+            tello.send_rc_control(0, 0, 0, 0)
 
     logger.afp_info("AutoFlightProcess End")
 

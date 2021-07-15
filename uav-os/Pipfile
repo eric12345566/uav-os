@@ -9,6 +9,9 @@ djitellopy2 = "*"
 opencv-contrib-python = "*"
 cli-ui = "*"
 simple-pid = "*"
+pandas = "*"
+matplotlib = "*"
+nba-api = "*"
 
 [dev-packages]
 
