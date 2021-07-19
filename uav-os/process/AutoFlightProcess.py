@@ -19,6 +19,10 @@ from service.AutoFlightStateService import AutoFlightStateService
 # Module
 from module.BackgroundFrameRead import BackgroundFrameRead
 from module.FrameSharedVar import FrameSharedVar
+from module.IndoorLocationShared import IndoorLocationShared
+
+# Worker
+from worker.indoorLocationWorker import indoorLocationWorker
 
 # Algo
 from module.algo.arucoMarkerDetect import arucoMarkerDetect, arucoMarkerDetectFrame
@@ -104,6 +108,11 @@ def AutoFlightProcess(FrameService, OSStateService):
                                                                frameSharedVar,), daemon=True)
     frameSendWorker.start()
 
+    # 室內定位座標 Worker 與 室內定位座標 var 共享物件
+    # indoorLocationSharedVar = IndoorLocationShared()
+    # indoorLocationWorker = Thread(target=indoorLocationWorker, args=(telloFrameBFR, indoorLocationSharedVar,))
+    # indoorLocationWorker.start()
+
     # ------------------ AutoFlightProcess is ready, init code End --------------------
     OSStateService.autoFlightInitReady()
     logger.afp_debug("AutoFlightProcess Start")
@@ -170,3 +179,4 @@ def AutoFlightProcess(FrameService, OSStateService):
 
     # Stop frameSendWorker
     frameSendWorker.join()
+
