@@ -22,7 +22,7 @@ from module.FrameSharedVar import FrameSharedVar
 from module.IndoorLocationShared import IndoorLocationShared
 
 # Worker
-from worker.indoorLocationWorker import indoorLocationWorker
+import worker.indoorLocationWorker as iLWorker
 
 # Algo
 from module.algo.arucoMarkerDetect import arucoMarkerDetect, arucoMarkerDetectFrame
@@ -108,18 +108,20 @@ def AutoFlightProcess(FrameService, OSStateService):
                                                                frameSharedVar,), daemon=True)
     frameSendWorker.start()
 
-    # 室內定位座標 Worker 與 室內定位座標 var 共享物件
-    # indoorLocationSharedVar = IndoorLocationShared()
-    # indoorLocationWorker = Thread(target=indoorLocationWorker, args=(telloFrameBFR, indoorLocationSharedVar,))
-    # indoorLocationWorker.start()
-
     # ------------------ AutoFlightProcess is ready, init code End --------------------
+
     OSStateService.autoFlightInitReady()
     logger.afp_debug("AutoFlightProcess Start")
 
     # Wait for OS ready
     while OSStateService.getCurrentState() == OSState.INITIALIZING:
         pass
+
+    # 室內定位座標 Worker 與 室內定位座標 var 共享物件
+    indoorLocationSharedVar = IndoorLocationShared()
+    indoorLocationWorker = Thread(target=iLWorker.indoorLocationWorker,
+                                  args=(telloFrameBFR, indoorLocationSharedVar,))
+    indoorLocationWorker.start()
 
     """ State
     """
@@ -128,19 +130,6 @@ def AutoFlightProcess(FrameService, OSStateService):
     afStateService.readyTakeOff()
     # TEST_MODE
     # afStateService.testMode()
-
-    """ Global Var
-    """
-    # Auto Landing
-    lrPID = PID(0.30, 0.0001, 0.1)
-    lrPID.output_limits = (-100, 100)
-    fbPID = PID(0.30, 0.0001, 0.1)
-    fbPID.output_limits = (-100, 100)
-    for_back_velocity = 0
-    left_right_velocity = 0
-    up_down_velocity = 0
-    yaw_velocity = 0
-    canLanding = False
 
     """ Main 主程式
     """
@@ -170,12 +159,16 @@ def AutoFlightProcess(FrameService, OSStateService):
             afStateService.end()
             pass
         elif afStateService.getState() == AutoFlightState.END:
-            pass
+            logger.afp_info("AFP End")
+            break
         elif afStateService.getState() == AutoFlightState.TEST_MODE:
             # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger)
             tello.send_rc_control(0, 0, 0, 0)
 
     logger.afp_info("AutoFlightProcess End")
+
+    # Stop indoorLocationWorker
+    indoorLocationWorker.join()
 
     # Stop frameSendWorker
     frameSendWorker.join()
