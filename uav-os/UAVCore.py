@@ -6,12 +6,14 @@ import time
 import process.ControllerProcess as ctrp
 import process.FrameProcess as fp
 import process.AutoFlightProcess as afp
+import process.terminalProcess as tp
 import process.MarkedFrameProcess as mfp
 
 # Class
 from classes.FrameClass import FrameClass
 
 # Service
+from service.terminalService import terminalService
 from service.OSStateService import OSStateService
 from service.FlightCmdService import FlightCmdService
 
@@ -21,6 +23,7 @@ if __name__ == '__main__':
 
     '''註冊資料類別
     '''
+    BaseManager.register('terminalService', terminalService)
     BaseManager.register('frameClass', FrameClass)
     BaseManager.register('osStateService', OSStateService)
     # BaseManager.register('flightCmdService', FlightCmdService)
@@ -29,6 +32,7 @@ if __name__ == '__main__':
 
     '''共享資料
     '''
+    terminalService = manager.terminalService()
     frameService = manager.frameClass()
     osStateService = manager.osStateService()
     # flightCmdService = manager.flightCmdService()
@@ -40,8 +44,8 @@ if __name__ == '__main__':
 
     ''' 執行緒創建
     '''
-    afpProcess = mp.Process(target=afp.AutoFlightProcess, args=(frameService, osStateService,))
-
+    afpProcess = mp.Process(target=afp.AutoFlightProcess, args=(frameService, osStateService, terminalService,))
+    tpProcess = mp.Process(target=tp.terminalProcess, args=(terminalService,))
     if osStateService.getMode() != "test":
         frameProcess = mp.Process(target=fp.FrameProcess, args=(frameService, osStateService,))
     else:
@@ -56,12 +60,14 @@ if __name__ == '__main__':
     #                                                                       flightCmdService,))
     ''' 開始執行緒
     '''
+    tpProcess.start()
     afpProcess.start()
     frameProcess.start()
     # ctrProcess.start()
 
     ''' 結束執行緒
     '''
+    tpProcess.join()
     afpProcess.join()
     frameProcess.join()
     # ctrProcess.join()

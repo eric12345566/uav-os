@@ -4,7 +4,6 @@ from threading import Thread
 
 # Controller
 from controller.AutoLandingController import autoLandingController
-from controller.AutoLandingSecController import TestSpeedController
 
 # State
 from State.OSStateEnum import OSState
@@ -17,6 +16,7 @@ from service.AutoFlightStateService import AutoFlightStateService
 # Module
 from module.BackgroundFrameRead import BackgroundFrameRead
 from module.FrameSharedVar import FrameSharedVar
+import process.terminalProcess as tp
 
 # Algo
 from module.algo.loadCoefficients import load_coefficients
@@ -48,34 +48,44 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
         cv.arrowedLine(frame, frame_center, (markCenterX, markCenterY), color=(0, 255, 0), thickness=2)
 
         # Put some text into frame
-        # cv.putText(frame, f"X Error: {frameSharedVar.getLrError()} PID: {frameSharedVar.getLrPID():.2f}", (20, 30),
-        #            cv.FONT_HERSHEY_SIMPLEX, 1,
-        #            (0, 255, 0), 2, cv.LINE_AA)
-        # cv.putText(frame, f"Y Error: {frameSharedVar.getFbError()} PID: {frameSharedVar.getFbPID():.2f}", (20, 70),
-        #            cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
-        # cv.putText(frame, f"Now Height: {frameSharedVar.landHeight}", (20, 110),
-        #            cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
-        # cv.putText(frame, f"isCenterIn: {frameSharedVar.isFrameCenterInMarker}", (20, 150),
-        #            cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
-
-        # text on frame for AutoLandingSecController
-        cv.putText(frame, f"rvec : {frameSharedVar.rvec}", (20, 30),
+        cv.putText(frame, f"X Error: {frameSharedVar.getLrError()} PID: {frameSharedVar.getLrPID():.2f}", (20, 30),
                    cv.FONT_HERSHEY_SIMPLEX, 1,
                    (0, 255, 0), 2, cv.LINE_AA)
-        cv.putText(frame, f"tvec : {frameSharedVar.tvec}", (20, 70),
-                   cv.FONT_HERSHEY_SIMPLEX, 1,
-                   (0, 255, 0), 2, cv.LINE_AA)
+        cv.putText(frame, f"Y Error: {frameSharedVar.getFbError()} PID: {frameSharedVar.getFbPID():.2f}", (20, 70),
+                   cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
+        cv.putText(frame, f"Now Height: {frameSharedVar.landHeight}", (20, 110),
+                   cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
+        cv.putText(frame, f"isCenterIn: {frameSharedVar.isFrameCenterInMarker}", (20, 150),
+                   cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
 
         # Send frame to FrameProcess
         FrameService.setFrame(frame)
         FrameService.setFrameReady()
 
 
+""" Set terminal value
+"""
+def setTerminal(terminalService, tello):
+    terminal_class = ['pitch', 'roll', 'yaw', 'battery', 'low_temperature', 'high_temperature', 'temperature', 'barometer']
+    terminal_value_class = []
+    terminal_value_class.append(tello.get_pitch())
+    terminal_value_class.append(tello.get_roll())
+    terminal_value_class.append(tello.get_yaw())
+    terminal_value_class.append(tello.get_battery())
+    terminal_value_class.append(tello.get_lowest_temperature())
+    terminal_value_class.append(tello.get_highest_temperature())
+    terminal_value_class.append(tello.get_temperature())
+    terminal_value_class.append(tello.get_barometer())
+
+    for key in terminal_class:
+        index = terminal_class.index(key)
+        terminalService.setInfo(key, terminal_value_class[index])
+
 """ Process
 """
 
 
-def AutoFlightProcess(FrameService, OSStateService):
+def AutoFlightProcess(FrameService, OSStateService, terminalService):
     # <Deprecated: 拋棄 Controller Process> Wait for Controller Ready, and get the frame
     # while not OSStateService.getControllerInitState():
     #     pass
@@ -83,6 +93,9 @@ def AutoFlightProcess(FrameService, OSStateService):
     # init Tello object
     tello = Tello()
     tello.connect()
+
+    # Init terminal value
+    setTerminal(terminalService, tello)
 
     # Tello Info
     logger.ctrp_info("battery: " + str(tello.get_battery()))
@@ -138,6 +151,9 @@ def AutoFlightProcess(FrameService, OSStateService):
         #     logger.afp_warning("Force Land commit, System Shutdown")
         #     break
 
+        # Update terminal value
+        setTerminal(terminalService, tello)
+
         # Auto Flight State Controller
         if afStateService.getState() == AutoFlightState.READY_TAKEOFF:
             # Take Off
@@ -147,7 +163,7 @@ def AutoFlightProcess(FrameService, OSStateService):
             # afStateService.testMode()
         elif afStateService.getState() == AutoFlightState.AUTO_LANDING:
             # Landing procedure
-            autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger)
+            autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger, terminalService)
         elif afStateService.getState() == AutoFlightState.LANDED:
             logger.afp_debug("State: Landed")
             afStateService.end()
@@ -156,9 +172,7 @@ def AutoFlightProcess(FrameService, OSStateService):
             pass
         elif afStateService.getState() == AutoFlightState.TEST_MODE:
             # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger)
-            # tello.send_rc_control(0, 0, 0, 0)
-            TestSpeedController(tello, telloFrameBFR, cameraCalibArr[0],
-                                     cameraCalibArr[1], afStateService, frameSharedVar)
+            tello.send_rc_control(0, 0, 0, 0)
 
     logger.afp_info("AutoFlightProcess End")
 
