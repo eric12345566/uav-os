@@ -4,6 +4,7 @@ from threading import Thread
 
 # Controller
 from controller.AutoLandingController import autoLandingController
+from controller.AutoLandingSecController import TestSpeedController
 
 # State
 from State.OSStateEnum import OSState
@@ -47,15 +48,23 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
         cv.arrowedLine(frame, frame_center, (markCenterX, markCenterY), color=(0, 255, 0), thickness=2)
 
         # Put some text into frame
-        cv.putText(frame, f"X Error: {frameSharedVar.getLrError()} PID: {frameSharedVar.getLrPID():.2f}", (20, 30),
+        # cv.putText(frame, f"X Error: {frameSharedVar.getLrError()} PID: {frameSharedVar.getLrPID():.2f}", (20, 30),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1,
+        #            (0, 255, 0), 2, cv.LINE_AA)
+        # cv.putText(frame, f"Y Error: {frameSharedVar.getFbError()} PID: {frameSharedVar.getFbPID():.2f}", (20, 70),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
+        # cv.putText(frame, f"Now Height: {frameSharedVar.landHeight}", (20, 110),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
+        # cv.putText(frame, f"isCenterIn: {frameSharedVar.isFrameCenterInMarker}", (20, 150),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
+
+        # text on frame for AutoLandingSecController
+        cv.putText(frame, f"rvec : {frameSharedVar.rvec}", (20, 30),
                    cv.FONT_HERSHEY_SIMPLEX, 1,
                    (0, 255, 0), 2, cv.LINE_AA)
-        cv.putText(frame, f"Y Error: {frameSharedVar.getFbError()} PID: {frameSharedVar.getFbPID():.2f}", (20, 70),
-                   cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
-        cv.putText(frame, f"Now Height: {frameSharedVar.landHeight}", (20, 110),
-                   cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
-        cv.putText(frame, f"isCenterIn: {frameSharedVar.isFrameCenterInMarker}", (20, 150),
-                   cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
+        cv.putText(frame, f"tvec : {frameSharedVar.tvec}", (20, 70),
+                   cv.FONT_HERSHEY_SIMPLEX, 1,
+                   (0, 255, 0), 2, cv.LINE_AA)
 
         # Send frame to FrameProcess
         FrameService.setFrame(frame)
@@ -147,7 +156,9 @@ def AutoFlightProcess(FrameService, OSStateService):
             pass
         elif afStateService.getState() == AutoFlightState.TEST_MODE:
             # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger)
-            tello.send_rc_control(0, 0, 0, 0)
+            # tello.send_rc_control(0, 0, 0, 0)
+            TestSpeedController(tello, telloFrameBFR, cameraCalibArr[0],
+                                     cameraCalibArr[1], afStateService, frameSharedVar)
 
     logger.afp_info("AutoFlightProcess End")
 
