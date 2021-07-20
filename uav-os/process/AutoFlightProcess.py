@@ -4,7 +4,7 @@ from threading import Thread
 
 # Controller
 from controller.AutoLandingController import autoLandingController
-from controller.AutoLandingSecController import TestSpeedController
+from controller.AutoLandingSecController import TestSpeedController, RvecTest, RvecAlignment
 
 # State
 from State.OSStateEnum import OSState
@@ -143,8 +143,8 @@ def AutoFlightProcess(FrameService, OSStateService):
             # Take Off
             # cmdUavRunOnce(FlightCmdService, CmdEnum.takeoff, 0)
             tello.takeoff()
-            afStateService.autoLanding()
-            # afStateService.testMode()
+            # afStateService.autoLanding()
+            afStateService.testMode()
         elif afStateService.getState() == AutoFlightState.AUTO_LANDING:
             # Landing procedure
             autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger)
@@ -157,8 +157,9 @@ def AutoFlightProcess(FrameService, OSStateService):
         elif afStateService.getState() == AutoFlightState.TEST_MODE:
             # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger)
             # tello.send_rc_control(0, 0, 0, 0)
-            TestSpeedController(tello, telloFrameBFR, cameraCalibArr[0],
-                                     cameraCalibArr[1], afStateService, frameSharedVar)
+            # TestSpeedController(tello, telloFrameBFR, cameraCalibArr[0],
+            #                     cameraCalibArr[1], afStateService, frameSharedVar)
+            RvecAlignment(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar)
 
     logger.afp_info("AutoFlightProcess End")
 

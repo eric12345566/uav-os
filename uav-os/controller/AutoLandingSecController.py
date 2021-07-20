@@ -9,6 +9,78 @@ from service.LoggerService import LoggerService
 logger = LoggerService()
 
 
+def AutoLandingSecController(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, afStateService, frameSharedVar):
+    while True:
+        # Process frame
+        frame = telloFrameBFR.frame
+        frame = cv.flip(frame, 1)
+        frameHeight, frameWidth, _ = frame.shape
+
+        # Get Post Estimation from Aruco Marker
+        centerX, centerY, rvec, tvec, ids = arucoTrackPostEstimate(matrix_coefficients, distortion_coefficients, frame)
+        frameSharedVar.rvec = rvec
+        frameSharedVar.tvec = tvec
+
+        if np.all(ids is not None):
+            # 取得與 marker 的 x, y 與高的位移量
+            xError = tvec[0][0][0]
+            yError = tvec[0][0][1]
+            hError = tvec[0][0][2]
+
+
+def RvecTest(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, afStateService, frameSharedVar):
+
+    while True:
+        # Process frame
+        frame = telloFrameBFR.frame
+        frame = cv.flip(frame, 1)
+        frameHeight, frameWidth, _ = frame.shape
+
+        # Get Post Estimation from Aruco Marker
+        centerX, centerY, rvec, tvec, ids = arucoTrackPostEstimate(matrix_coefficients, distortion_coefficients, frame)
+        frameSharedVar.rvec = rvec
+        frameSharedVar.tvec = tvec
+
+
+def RvecAlignment(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, afStateService, frameSharedVar):
+    yaw_speed = 0
+    isAlignmentYaw = False
+    while True:
+        # Process frame
+        frame = telloFrameBFR.frame
+        frame = cv.flip(frame, 1)
+        frameHeight, frameWidth, _ = frame.shape
+
+        # Get Post Estimation from Aruco Marker
+        centerX, centerY, rvec, tvec, ids = arucoTrackPostEstimate(matrix_coefficients, distortion_coefficients, frame)
+        frameSharedVar.rvec = rvec
+        frameSharedVar.tvec = tvec
+
+        if np.all(ids is not None):
+            yawError = abs(rvec[0][0][0])
+
+            # 如果相對於 marker 的 yaw 沒那麼準時，進行修正
+            if 1.0 <= yawError <= 3.1:
+                yaw_speed = 20
+                isAlignmentYaw = False
+            elif 0 < yawError < 1.0:
+                yaw_speed = 0
+                isAlignmentYaw = True
+            elif 3.1 < yawError < 3.3:
+                yaw_speed = 0
+                isAlignmentYaw = True
+        else:
+            yaw_speed = 0
+
+        if not isAlignmentYaw:
+            tello.send_rc_control(0, 0, 0, yaw_speed)
+        else:
+            tello.send_rc_control(0, 0, 0, 0)
+            tello.land()
+            afStateService.landed()
+            break
+
+
 def TestSpeedFly(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, afStateService, frameSharedVar):
     while True:
         # Process frame
@@ -17,7 +89,7 @@ def TestSpeedFly(tello, telloFrameBFR, matrix_coefficients, distortion_coefficie
         frameHeight, frameWidth, _ = frame.shape
 
         # Get Post Estimation from Aruco Marker
-        centerX, centerY, rvec, tvec = arucoTrackPostEstimate(matrix_coefficients, distortion_coefficients, frame)
+        centerX, centerY, rvec, tvec, ids = arucoTrackPostEstimate(matrix_coefficients, distortion_coefficients, frame)
 
         if rvec is not None and tvec is not None:
             frameSharedVar.rvec = rvec[0][0]
@@ -47,7 +119,7 @@ def TestSpeedController(tello, telloFrameBFR, matrix_coefficients, distortion_co
         frameHeight, frameWidth, _ = frame.shape
 
         # Get Post Estimation from Aruco Marker
-        centerX, centerY, rvec, tvec = arucoTrackPostEstimate(matrix_coefficients, distortion_coefficients, frame)
+        centerX, centerY, rvec, tvec, ids = arucoTrackPostEstimate(matrix_coefficients, distortion_coefficients, frame)
 
         if rvec is not None and tvec is not None:
             frameSharedVar.rvec = rvec[0][0]
@@ -57,8 +129,8 @@ def TestSpeedController(tello, telloFrameBFR, matrix_coefficients, distortion_co
             if isFirstTimeGetY:
                 # tello.send_rc_control(0, 0, 0, 0)
 
-                centerX, centerY, rvec, tvec = arucoTrackPostEstimate(matrix_coefficients, distortion_coefficients,
-                                                                      frame)
+                centerX, centerY, rvec, tvec, ids = arucoTrackPostEstimate(matrix_coefficients, distortion_coefficients,
+                                                                           frame)
                 initY = tvec[0][0][1]
                 isFirstTimeGetY = False
 

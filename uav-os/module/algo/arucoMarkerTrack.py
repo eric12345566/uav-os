@@ -40,7 +40,7 @@ def arucoTrackPostEstimate(matrix_coefficients, distortion_coefficients, frame):
         centerY = None
         rvec = None
         tvec = None
-    return centerX, centerY, rvec, tvec
+    return centerX, centerY, rvec, tvec, ids
 
 
 def arucoTrackWriteFrame(matrix_coefficients, distortion_coefficients, frame):
