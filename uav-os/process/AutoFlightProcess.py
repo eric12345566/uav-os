@@ -21,7 +21,6 @@ from module.BackgroundFrameRead import BackgroundFrameRead
 from module.FrameSharedVar import FrameSharedVar
 
 # Algo
-from module.algo.arucoMarkerDetect import arucoMarkerDetect, arucoMarkerDetectFrame
 from module.algo.loadCoefficients import load_coefficients
 from module.algo.arucoMarkerTrack import arucoTrackWriteFrame
 
