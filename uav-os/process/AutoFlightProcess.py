@@ -1,7 +1,4 @@
-import time
-import numpy as np
 import cv2 as cv
-from simple_pid import PID
 from djitellopy import Tello
 from threading import Thread
 
@@ -118,19 +115,6 @@ def AutoFlightProcess(FrameService, OSStateService):
     afStateService.readyTakeOff()
     # TEST_MODE
     # afStateService.testMode()
-
-    """ Global Var
-    """
-    # Auto Landing
-    lrPID = PID(0.30, 0.0001, 0.1)
-    lrPID.output_limits = (-100, 100)
-    fbPID = PID(0.30, 0.0001, 0.1)
-    fbPID.output_limits = (-100, 100)
-    for_back_velocity = 0
-    left_right_velocity = 0
-    up_down_velocity = 0
-    yaw_velocity = 0
-    canLanding = False
 
     """ Main 主程式
     """
