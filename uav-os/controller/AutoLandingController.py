@@ -175,3 +175,6 @@ def autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, 
                 canLanding = False
         else:
             pass
+
+        # 控制辨識幀率
+        time.sleep(0.1)
