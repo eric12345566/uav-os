@@ -67,6 +67,11 @@ def autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, 
         # ArUco Marker Detect
         corners, ids, rejectedImgPoints = arucoMarkerDetect(frame)
 
+        if terminalService.getForceLanding() == True:
+            afStateService.forceLanding()
+            tello.land()
+            break
+
         if np.all(ids is not None):
             # 若有找到降落點，則嘗試進行對準降落
 

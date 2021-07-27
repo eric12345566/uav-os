@@ -2,6 +2,7 @@
 class terminalService(object):
 
     def __init__(self):
+        # init tello parameter
         self.tello_pitch = 0
         self.tello_roll = 0
         self.tello_yaw = 0
@@ -10,6 +11,8 @@ class terminalService(object):
         self.highest_temperature = 0
         self.average_temperature = 0
         self.barometer = 0
+        # force landing
+        self.forceLanding = False
 
     """
         Utility function
@@ -50,3 +53,9 @@ class terminalService(object):
         elif key == 'barometer':
             return self.barometer
         return 0
+
+    def setForceLanding(self, state):
+        self.forceLanding = state
+
+    def getForceLanding(self):
+        return self.forceLanding

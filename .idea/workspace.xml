@@ -2,12 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="6bc80d43-3f3a-4091-9c02-417bec0d582d" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/uav-os/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/uav-os/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/uav-os/.idea/uav-os.iml" beforeDir="false" afterPath="$PROJECT_DIR$/uav-os/.idea/uav-os.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/uav-os/UAVCore.py" beforeDir="false" afterPath="$PROJECT_DIR$/uav-os/UAVCore.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/uav-os/classes/FrameClass.py" beforeDir="false" afterPath="$PROJECT_DIR$/uav-os/classes/FrameClass.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/uav-os/module/BackgroundFrameRead.py" beforeDir="false" afterPath="$PROJECT_DIR$/uav-os/module/BackgroundFrameRead.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/uav-os/process/AutoFlightProcess.py" beforeDir="false" afterPath="$PROJECT_DIR$/uav-os/process/AutoFlightProcess.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -24,6 +19,7 @@
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/uav-os" />
@@ -39,5 +35,16 @@
       <updated>1626771592039</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>

@@ -54,8 +54,8 @@ class Begueradj():
         self.lbl_title2.grid(column=0, row=1, sticky=self.align_mode)
 
         # div3
-        self.bt1 = tkinter.Button(self.div3, text='Button 1', bg='green', fg='white', font=self.general_font)
-        self.bt2 = tkinter.Button(self.div3, text='Button 2', bg='green', fg='white', font=self.general_font)
+        self.bt1 = tkinter.Button(self.div3, text='Force land', command=self.auto_landing, bg='green', fg='white', font=self.general_font)
+        self.bt2 = tkinter.Button(self.div3, text='Take off', command=self.ready_takeOff, bg='green', fg='white', font=self.general_font)
         self.bt3 = tkinter.Button(self.div3, text='Button 3', bg='green', fg='white', font=self.general_font)
         self.bt4 = tkinter.Button(self.div3, text='Button 4', bg='green', fg='white', font=self.general_font)
 
@@ -104,6 +104,12 @@ class Begueradj():
 
         self.lbl_battery_percentage.grid(column=0, row=1, padx=self.pad_font, pady=self.pad_font, sticky='w')
 
+    def auto_landing(self):
+        self.terminalService.setForceLanding(True)
+
+    def ready_takeOff(self):
+        self.terminalService.setForceLanding(False)
+
     def getTime(self):
         self.tello_pitch = self.terminalService.getInfo('pitch')
         self.tello_roll = self.terminalService.getInfo('roll')
@@ -123,7 +129,7 @@ class Begueradj():
         self.lbl_avg_temp.config(text='Average temperature: ' + str(self.average_temperature))
         self.lbl_battery_percentage.config(text='Battery percentage: ' + str(self.tello_battery_percentage) + '%')
 
-        self.window.after(5, self.getTime)  # 每隔1s调用函数 gettime 自身获取时间
+        self.window.after(5, self.getTime)  # 每隔5ms调用函数 gettime 自身获取时间
 
     def define_layout(self, obj, cols=1, rows=1):
         def method(trg, col, row):

@@ -153,6 +153,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
 
         # Update terminal value
         setTerminal(terminalService, tello)
+        if terminalService.getForceLanding() == False and afStateService.getState() == AutoFlightState.FORCE_LANDING:
+            afStateService.readyTakeOff()
 
         # Auto Flight State Controller
         if afStateService.getState() == AutoFlightState.READY_TAKEOFF:
