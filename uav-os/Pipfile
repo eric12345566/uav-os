@@ -12,8 +12,12 @@ simple-pid = "*"
 pandas = "*"
 matplotlib = "*"
 nba-api = "*"
+opencv-python = "*"
+pillow = "*"
+tello = "*"
+pyzbar = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.9"
+python_version = "3.7"

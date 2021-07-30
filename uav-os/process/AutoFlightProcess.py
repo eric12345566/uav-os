@@ -28,6 +28,7 @@ import worker.indoorLocationWorker as iLWorker
 from module.algo.arucoMarkerDetect import arucoMarkerDetect, arucoMarkerDetectFrame
 from module.algo.loadCoefficients import load_coefficients
 from module.algo.arucoMarkerTrack import arucoTrackWriteFrame
+from module.indoorLocationAlgo.QrcodePositionAlgo import streamDecode
 
 logger = LoggerService()
 
@@ -41,8 +42,7 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
         # test Add frame
         frame = cv.flip(frame, 1)
         frameHeight, frameWidth, _ = frame.shape
-
-        # markedFrame = arucoMarkerDetectFrame(frame)
+        markedFrame = arucoMarkerDetectFrame(frame)
         markCenterX, markCenterY = arucoTrackWriteFrame(cameraCalibArr[0], cameraCalibArr[1], frame)
 
         # Center point of frame
@@ -120,7 +120,7 @@ def AutoFlightProcess(FrameService, OSStateService):
     # 室內定位座標 Worker 與 室內定位座標 var 共享物件
     indoorLocationSharedVar = IndoorLocationShared()
     indoorLocationWorker = Thread(target=iLWorker.indoorLocationWorker,
-                                  args=(telloFrameBFR, indoorLocationSharedVar,))
+                                  args=(telloFrameBFR, indoorLocationSharedVar,), daemon=True)
     indoorLocationWorker.start()
 
     """ State
@@ -128,9 +128,10 @@ def AutoFlightProcess(FrameService, OSStateService):
     afStateService = AutoFlightStateService()
 
     afStateService.readyTakeOff()
-    # TEST_MODE
-    # afStateService.testMode()
 
+    # TODO: 把TestMode
+    # TEST_MODE
+    afStateService.testMode()
     """ Main 主程式
     """
     while True:
@@ -163,7 +164,12 @@ def AutoFlightProcess(FrameService, OSStateService):
             break
         elif afStateService.getState() == AutoFlightState.TEST_MODE:
             # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger)
-            tello.send_rc_control(0, 0, 0, 0)
+            # tello.send_rc_control(0, 0, 0, 0)
+
+            print('-------------------Position--------------------')
+            print(str(indoorLocationSharedVar.getLocation()))
+            # print(str(indoorLocationShared.x_location), str(indoorLocationShared.y_location), str(indoorLocationShared.direction))
+            pass
 
     logger.afp_info("AutoFlightProcess End")
 
