@@ -26,7 +26,7 @@ import process.terminalProcess as tp
 # Algo
 from module.algo.loadCoefficients import load_coefficients
 from module.algo.arucoMarkerTrack import arucoTrackWriteFrame
-
+from module.terminalModule import setTerminal
 logger = LoggerService()
 
 
@@ -66,28 +66,6 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
         # Send frame to FrameProcess
         FrameService.setFrame(frame)
         FrameService.setFrameReady()
-
-
-""" Set terminal value
-"""
-
-
-def setTerminal(terminalService, tello):
-    terminal_class = ['pitch', 'roll', 'yaw', 'battery', 'low_temperature', 'high_temperature', 'temperature', 'barometer']
-    terminal_value_class = []
-    terminal_value_class.append(tello.get_pitch())
-    terminal_value_class.append(tello.get_roll())
-    terminal_value_class.append(tello.get_yaw())
-    terminal_value_class.append(tello.get_battery())
-    terminal_value_class.append(tello.get_lowest_temperature())
-    terminal_value_class.append(tello.get_highest_temperature())
-    terminal_value_class.append(tello.get_temperature())
-    terminal_value_class.append(tello.get_barometer())
-
-    for key in terminal_class:
-        index = terminal_class.index(key)
-        terminalService.setInfo(key, terminal_value_class[index])
-
 
 """ Process
 """
@@ -187,7 +165,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             # TestSpeedController(tello, telloFrameBFR, cameraCalibArr[0],
             #                     cameraCalibArr[1], afStateService, frameSharedVar)
             # RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar)
-            RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar)
+            RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar, terminalService)
 
     logger.afp_info("AutoFlightProcess End")
 

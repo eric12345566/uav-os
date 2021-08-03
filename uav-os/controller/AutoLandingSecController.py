@@ -4,6 +4,7 @@ import time
 
 # module & algo
 from module.algo.arucoMarkerTrack import arucoTrackPostEstimate
+from module.terminalModule import setTerminal
 from service.LoggerService import LoggerService
 
 logger = LoggerService()
@@ -218,9 +219,12 @@ def AutoLandingSecController(tello, telloFrameBFR, matrix_coefficients, distorti
             tello.send_rc_control(0, 0, 0, 0)
 
 
-def RvecTest(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, afStateService, frameSharedVar):
+def RvecTest(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, afStateService, frameSharedVar, terminalService):
 
     while True:
+        # Update terminal value
+        setTerminal(terminalService, tello)
+
         # Process frame
         frame = telloFrameBFR.frame
         frame = cv.flip(frame, 1)
