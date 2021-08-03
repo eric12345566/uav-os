@@ -12,6 +12,7 @@ simple-pid = "*"
 pandas = "*"
 matplotlib = "*"
 nba-api = "*"
+tk = "*"
 
 [dev-packages]
 
