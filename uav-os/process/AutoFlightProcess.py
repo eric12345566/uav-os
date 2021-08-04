@@ -131,7 +131,7 @@ def AutoFlightProcess(FrameService, OSStateService):
 
     # TODO: 把TestMode
     # TEST_MODE
-    afStateService.testMode()
+    # afStateService.testMode()
     """ Main 主程式
     """
     while True:
@@ -150,8 +150,8 @@ def AutoFlightProcess(FrameService, OSStateService):
             # Take Off
             # cmdUavRunOnce(FlightCmdService, CmdEnum.takeoff, 0)
             tello.takeoff()
-            afStateService.autoLanding()
-            # afStateService.testMode()
+            # afStateService.autoLanding()
+            afStateService.testMode()
         elif afStateService.getState() == AutoFlightState.AUTO_LANDING:
             # Landing procedure
             autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger)
@@ -164,8 +164,7 @@ def AutoFlightProcess(FrameService, OSStateService):
             break
         elif afStateService.getState() == AutoFlightState.TEST_MODE:
             # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger)
-            # tello.send_rc_control(0, 0, 0, 0)
-
+            tello.send_rc_control(0, 0, 0, 0)
             print('-------------------Position--------------------')
             print(str(indoorLocationSharedVar.getLocation()))
             # print(str(indoorLocationShared.x_location), str(indoorLocationShared.y_location), str(indoorLocationShared.direction))

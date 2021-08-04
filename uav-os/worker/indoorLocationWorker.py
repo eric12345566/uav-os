@@ -30,7 +30,6 @@ def indoorLocationWorker(telloFrameBFR, indoorLocationShared):
             # print('-------------------------------------------------')
             indoorLocationShared.x_location, indoorLocationShared.y_location = transferLocationID(str(qrPosition))
             indoorLocationShared.direction = rotateAngle
-        print('hahaha')
         print(indoorLocationShared.direction)
 
     # x, y, dirt = indoorLocationAlgo(frame)
