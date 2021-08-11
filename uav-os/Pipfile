@@ -12,10 +12,11 @@ simple-pid = "*"
 pandas = "*"
 matplotlib = "*"
 nba-api = "*"
-opencv-python = "*"
 pillow = "*"
-tello = "*"
+tk = "*"
 pyzbar = "*"
+opencv-python = "*"
+tello = "*"
 
 [dev-packages]
 

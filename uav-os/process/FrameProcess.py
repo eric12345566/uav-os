@@ -19,7 +19,8 @@ def FrameProcess(FrameService, OSStateService):
     # Show frame
     while True:
         frame = FrameService.getFrame()
-
+        frame = cv.flip(frame, 0)
+        frame = cv.flip(frame, 1)
         cv.imshow('frame', frame)
         if cv.waitKey(1) & 0xFF == ord('q'):
             break

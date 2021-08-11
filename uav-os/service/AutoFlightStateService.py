@@ -34,3 +34,7 @@ class AutoFlightStateService(object):
     # End 之後回到 ReadyTakeOff
     def backToReady(self):
         self.State = AutoFlightState.READY_TAKEOFF
+
+    # Force Landing
+    def forceLanding(self):
+        self.State = AutoFlightState.FORCE_LANDING

@@ -1,12 +1,14 @@
 import time
-import numpy as np
+
 import cv2 as cv
-from simple_pid import PID
 from djitellopy import Tello
 from threading import Thread
 
 # Controller
 from controller.AutoLandingController import autoLandingController
+from controller.AutoLandingSecController import AutoLandingSecController, RvecTest, TestSpeedFly, AdjustDistToTarget, AutoLandingNewSecController
+from controller.YawAlignmentController import YawAlignmentController
+from controller.AutoLandingThirdController import AutoLandingThirdController
 
 # State
 from State.OSStateEnum import OSState
@@ -19,15 +21,18 @@ from service.AutoFlightStateService import AutoFlightStateService
 # Module
 from module.BackgroundFrameRead import BackgroundFrameRead
 from module.FrameSharedVar import FrameSharedVar
+import process.terminalProcess as tp
 from module.IndoorLocationShared import IndoorLocationShared
 
 # Worker
 import worker.indoorLocationWorker as iLWorker
 
 # Algo
-from module.algo.arucoMarkerDetect import arucoMarkerDetect, arucoMarkerDetectFrame
 from module.algo.loadCoefficients import load_coefficients
 from module.algo.arucoMarkerTrack import arucoTrackWriteFrame
+from module.algo.arucoMarkerDetect import arucoMarkerDetectFrame
+
+from module.terminalModule import setTerminal
 from module.indoorLocationAlgo.QrcodePositionAlgo import streamDecode
 
 logger = LoggerService()
@@ -69,12 +74,11 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
         FrameService.setFrame(frame)
         FrameService.setFrameReady()
 
-
 """ Process
 """
 
 
-def AutoFlightProcess(FrameService, OSStateService):
+def AutoFlightProcess(FrameService, OSStateService, terminalService):
     # <Deprecated: 拋棄 Controller Process> Wait for Controller Ready, and get the frame
     # while not OSStateService.getControllerInitState():
     #     pass
@@ -82,6 +86,9 @@ def AutoFlightProcess(FrameService, OSStateService):
     # init Tello object
     tello = Tello()
     tello.connect()
+
+    # Init terminal value
+    setTerminal(terminalService, tello)
 
     # Tello Info
     logger.ctrp_info("battery: " + str(tello.get_battery()))
@@ -118,9 +125,10 @@ def AutoFlightProcess(FrameService, OSStateService):
         pass
 
     # 室內定位座標 Worker 與 室內定位座標 var 共享物件
+    # TODO: 增加 terminalService 進去indoorLocationWorker
     indoorLocationSharedVar = IndoorLocationShared()
     indoorLocationWorker = Thread(target=iLWorker.indoorLocationWorker,
-                                  args=(telloFrameBFR, indoorLocationSharedVar,), daemon=True)
+                                  args=(telloFrameBFR, indoorLocationSharedVar, terminalService, tello), daemon=True)
     indoorLocationWorker.start()
 
     """ State
@@ -145,6 +153,11 @@ def AutoFlightProcess(FrameService, OSStateService):
         #     logger.afp_warning("Force Land commit, System Shutdown")
         #     break
 
+        # Update terminal value
+        setTerminal(terminalService, tello)
+        if terminalService.getForceLanding() == False and afStateService.getState() == AutoFlightState.FORCE_LANDING:
+            afStateService.readyTakeOff()
+
         # Auto Flight State Controller
         if afStateService.getState() == AutoFlightState.READY_TAKEOFF:
             # Take Off
@@ -154,7 +167,7 @@ def AutoFlightProcess(FrameService, OSStateService):
             afStateService.testMode()
         elif afStateService.getState() == AutoFlightState.AUTO_LANDING:
             # Landing procedure
-            autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger)
+            autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger, terminalService)
         elif afStateService.getState() == AutoFlightState.LANDED:
             logger.afp_debug("State: Landed")
             afStateService.end()
@@ -169,6 +182,7 @@ def AutoFlightProcess(FrameService, OSStateService):
             print(str(indoorLocationSharedVar.getLocation()))
             # print(str(indoorLocationShared.x_location), str(indoorLocationShared.y_location), str(indoorLocationShared.direction))
             pass
+            RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar, terminalService)
 
     logger.afp_info("AutoFlightProcess End")
 

@@ -17,8 +17,8 @@ class BackgroundFrameRead:
             self.cap.open(address)
 
         self.grabbed, self.frame = self.cap.read()
-        if not self.grabbed or self.frame is None:
-            raise Exception('Failed to grab first frame from video stream')
+        while not self.grabbed or self.frame is None:
+            self.grabbed, self.frame = self.cap.read()
 
         self.stopped = False
         self.worker = Thread(target=self.update_frame, args=(), daemon=True)

@@ -33,11 +33,11 @@
         },
         "cli-ui": {
             "hashes": [
-                "sha256:52ca24d73516880e02a0289e52693b2fcf9c58317e046f9f092176978854c31b",
-                "sha256:52ec5b9bebcae86356053376c761a14ea5adb55d7bee071dad485766839a3428"
+                "sha256:137ae4f1f936cdb4297ce0ce0e0426d5b50c5617691b0e576e45faed7f2d7732",
+                "sha256:83367964cf15e3379c81dfbd64b5d1855f983c427d9a79c3c41287722d3e087d"
             ],
             "index": "pypi",
-            "version": "==0.14.1"
+            "version": "==0.15.0"
         },
         "colorama": {
             "hashes": [
