@@ -1,5 +1,7 @@
 """ Set terminal value
 """
+
+
 def setTerminal(terminalService, tello):
     terminal_class = ['pitch', 'roll', 'yaw', 'battery', 'low_temperature', 'high_temperature', 'temperature', 'barometer']
     terminal_value_class = []

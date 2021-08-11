@@ -53,15 +53,24 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
         cv.arrowedLine(frame, frame_center, (markCenterX, markCenterY), color=(0, 255, 0), thickness=2)
 
         # Put some text into frame
-        cv.putText(frame, f"X Error: {frameSharedVar.getLrError()} PID: {frameSharedVar.getLrPID():.2f}", (20, 30),
+        # cv.putText(frame, f"X Error: {frameSharedVar.getLrError()} PID: {frameSharedVar.getLrPID():.2f}", (20, 30),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1,
+        #            (0, 255, 0), 2, cv.LINE_AA)
+        # cv.putText(frame, f"Y Error: {frameSharedVar.getFbError()} PID: {frameSharedVar.getFbPID():.2f}", (20, 70),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
+        # cv.putText(frame, f"Now Height: {frameSharedVar.landHeight}", (20, 110),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
+        # cv.putText(frame, f"isCenterIn: {frameSharedVar.isFrameCenterInMarker}", (20, 150),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
+
+        # For ArUco Marker new
+        cv.putText(frame, f"rvec: {frameSharedVar.rvec}", (20, 30),
                    cv.FONT_HERSHEY_SIMPLEX, 1,
                    (0, 255, 0), 2, cv.LINE_AA)
-        cv.putText(frame, f"Y Error: {frameSharedVar.getFbError()} PID: {frameSharedVar.getFbPID():.2f}", (20, 70),
-                   cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
-        cv.putText(frame, f"Now Height: {frameSharedVar.landHeight}", (20, 110),
-                   cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
-        cv.putText(frame, f"isCenterIn: {frameSharedVar.isFrameCenterInMarker}", (20, 150),
-                   cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
+        cv.putText(frame, f"tvec: {frameSharedVar.tvec}", (20, 70),
+                   cv.FONT_HERSHEY_SIMPLEX, 1,
+                   (0, 255, 0), 2, cv.LINE_AA)
+
 
         # Send frame to FrameProcess
         FrameService.setFrame(frame)
@@ -122,7 +131,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
 
     afStateService.readyTakeOff()
     # TEST_MODE
-    afStateService.testMode()
+    # afStateService.testMode()
 
     """ Main 主程式
     """
@@ -147,7 +156,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             # Take Off
             # cmdUavRunOnce(FlightCmdService, CmdEnum.takeoff, 0)
             tello.takeoff()
-            # tello.move_down(20)
+            # tello.move_up(20)
             # afStateService.autoLanding()
             afStateService.testMode()
         elif afStateService.getState() == AutoFlightState.AUTO_LANDING:
@@ -165,7 +174,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             # TestSpeedController(tello, telloFrameBFR, cameraCalibArr[0],
             #                     cameraCalibArr[1], afStateService, frameSharedVar)
             # RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar)
-            RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar, terminalService)
+            AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar, terminalService)
 
     logger.afp_info("AutoFlightProcess End")
 

@@ -5,6 +5,7 @@ import time
 # module & algo
 from module.algo.arucoMarkerTrack import arucoTrackPostEstimate
 from service.LoggerService import LoggerService
+from module.terminalModule import setTerminal
 
 logger = LoggerService()
 
@@ -51,15 +52,20 @@ def flyALittle(tello, direction):
     time.sleep(3)
 
 
-def AutoLandingThirdController(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, afStateService, frameSharedVar):
+def AutoLandingThirdController(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, afStateService, frameSharedVar, terminalService):
     while True:
+        # Update terminal value
+        setTerminal(terminalService, tello)
+
         # 辨識 marker 數值
         xError, yError, hError, isSeeMarker = arucoPoseCoordinate(telloFrameBFR, matrix_coefficients,
                                                                   distortion_coefficients, frameSharedVar)
 
         if isSeeMarker and abs(xError) <= 200.0 and abs(yError) <= 200.0:
             # 如果有看到標點，而且 tvec 數值沒有爆炸
-            if abs(xError) >= 4 or abs(yError) >= 4:
+            xErrorLimit = 3
+            yErrorLimit = 3
+            if abs(xError) >= xErrorLimit or abs(yError) >= yErrorLimit:
                 # 如果標點大於可降落範圍，則進行修正到位置
                 # 先調整前後
                 fbIsOk = False
@@ -69,10 +75,10 @@ def AutoLandingThirdController(tello, telloFrameBFR, matrix_coefficients, distor
                                                                               distortion_coefficients, frameSharedVar)
 
                     if isSeeMarker and abs(xError) <= 200 and abs(yError) <= 200:
-                        if yError >= 4:
+                        if yError >= yErrorLimit:
                             # 當飛機在 Aruco Marker 下面（銀色夾子在上）
                             flyALittle(tello, "f")
-                        elif yError <= -4:
+                        elif yError <= -yErrorLimit:
                             # 當飛機在 Aruco Marker 上面（銀色夾子在上）
                             flyALittle(tello, "b")
                         else:
@@ -86,10 +92,10 @@ def AutoLandingThirdController(tello, telloFrameBFR, matrix_coefficients, distor
                                                                               distortion_coefficients, frameSharedVar)
 
                     if isSeeMarker and abs(xError) <= 200 and abs(yError) <= 200:
-                        if xError >= 4:
+                        if xError >= xErrorLimit:
                             # 當飛機在 Aruco Marker 的右邊
                             flyALittle(tello, "l")
-                        elif xError <= -4:
+                        elif xError <= -xErrorLimit:
                             # 當飛機在 Aruco Marker 的左邊
                             flyALittle(tello, "r")
                         else:

@@ -7,8 +7,11 @@ import cv2 as cv
 # Algo
 from module.algo.arucoMarkerDetect import arucoMarkerDetect, arucoMarkerDetectFrame
 
+
 """ Set terminal value
 """
+
+
 def setTerminal(terminalService, tello):
     terminal_class = ['pitch', 'roll', 'yaw', 'battery', 'low_temperature', 'high_temperature', 'temperature', 'barometer']
     terminal_value_class = []
@@ -24,6 +27,7 @@ def setTerminal(terminalService, tello):
     for key in terminal_class:
         index = terminal_class.index(key)
         terminalService.setInfo(key, terminal_value_class[index])
+
 
 def autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger, terminalService):
     lrPID = PID(0.3, 0.0001, 0.1)
