@@ -38,3 +38,7 @@ class AutoFlightStateService(object):
     # Force Landing
     def forceLanding(self):
         self.State = AutoFlightState.FORCE_LANDING
+
+    # Keyboard Control
+    def keyboardControl(self):
+        self.State = AutoFlightState.KEYBOARD_CONTROL

@@ -17,6 +17,7 @@ tk = "*"
 pyzbar = "*"
 opencv-python = "*"
 tello = "*"
+keyboard = "*"
 
 [dev-packages]
 

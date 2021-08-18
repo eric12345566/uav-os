@@ -3,6 +3,8 @@ import time
 import cv2 as cv
 from djitellopy import Tello
 from threading import Thread
+import keyboard
+import time
 
 # Controller
 from controller.AutoLandingController import autoLandingController
@@ -34,6 +36,7 @@ from module.algo.arucoMarkerDetect import arucoMarkerDetectFrame
 
 from module.terminalModule import setTerminal
 from module.indoorLocationAlgo.QrcodePositionAlgo import streamDecode
+
 
 logger = LoggerService()
 
@@ -98,7 +101,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
     tello.streamoff()
     tello.streamon()
 
-    # Get Frame from UDP using BackgroundFrameRead class (thread)
+    # Get Frame from UDP using BackgroundFrameRead class (thread)ㄒ
     telloUDPAddr = tello.get_udp_video_address()
     telloFrameBFR = BackgroundFrameRead(telloUDPAddr)
     telloFrameBFR.start()
@@ -177,12 +180,24 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             break
         elif afStateService.getState() == AutoFlightState.TEST_MODE:
             # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger)
+
             tello.send_rc_control(0, 0, 0, 0)
             print('-------------------Position--------------------')
             print(str(indoorLocationSharedVar.getLocation()))
             # print(str(indoorLocationShared.x_location), str(indoorLocationShared.y_location), str(indoorLocationShared.direction))
             pass
             RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar, terminalService)
+            print("State!!!")
+            print(afStateService.getState())
+        elif afStateService.getState() == AutoFlightState.KEYBOARD_CONTROL:
+            while True:
+                print("In State")
+                if keyboard.read_key() == "p":
+                    time.sleep(1)
+                    print("You pressed p")
+                    tello.move_up(20)
+                    time.sleep(1)
+
 
     logger.afp_info("AutoFlightProcess End")
 
@@ -191,4 +206,28 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
 
     # Stop frameSendWorker
     frameSendWorker.join()
+
+    #                       _oo0oo_
+    #                      o8888888o
+    #                      88" . "88
+    #                      (| -_- |)
+    #                      0\  =  /0
+    #                    ___/`---'\___
+    #                  .' \\|     |// '.
+    #                 / \\|||  :  |||// \
+    #                / _||||| -:- |||||- \
+    #               |   | \\\  -  /// |   |
+    #               | \_|  ''\---/''  |_/ |
+    #               \  .-\__  '-'  ___/-. /
+    #             ___'. .'  /--.--\  `. .'___
+    #          ."" '<  `.___\_<|>_/___.' >' "".
+    #         | | :  `- \`.;`\ _ /`;.`/ - ` : | |
+    #         \  \ `_.   \_ __\ /__ _/   .-` /  /
+    #     =====`-.____`.___ \_____/___.-`___.-'=====
+    #                       `=---='
+    #
+    #
+    #     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #
+    #               佛祖保佑         永無BUG
 
