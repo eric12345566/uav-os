@@ -124,10 +124,10 @@ class Begueradj():
 
     def keyboard_trigger(self):
         print('trigger!!!')
-        if self.terminalService.getKeyboardTrigger():
-            self.terminalService.setKeyboardTrigger(False)
-        else:
+        if not self.terminalService.getKeyboardTrigger():
             self.terminalService.setKeyboardTrigger(True)
+            print("SW to Control")
+
 
     def getTime(self):
         self.tello_pitch = self.terminalService.getInfo('pitch')

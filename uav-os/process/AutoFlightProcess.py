@@ -8,7 +8,8 @@ import time
 
 # Controller
 from controller.AutoLandingController import autoLandingController
-from controller.AutoLandingSecController import AutoLandingSecController, RvecTest, TestSpeedFly, AdjustDistToTarget, AutoLandingNewSecController
+from controller.AutoLandingSecController import AutoLandingSecController, RvecTest, TestSpeedFly, AdjustDistToTarget, \
+    AutoLandingNewSecController
 from controller.YawAlignmentController import YawAlignmentController
 from controller.AutoLandingThirdController import AutoLandingThirdController
 
@@ -36,7 +37,6 @@ from module.algo.arucoMarkerDetect import arucoMarkerDetectFrame
 
 from module.terminalModule import setTerminal
 from module.indoorLocationAlgo.QrcodePositionAlgo import streamDecode
-
 
 logger = LoggerService()
 
@@ -76,6 +76,7 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
         # Send frame to FrameProcess
         FrameService.setFrame(frame)
         FrameService.setFrameReady()
+
 
 """ Process
 """
@@ -186,18 +187,46 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             print(str(indoorLocationSharedVar.getLocation()))
             # print(str(indoorLocationShared.x_location), str(indoorLocationShared.y_location), str(indoorLocationShared.direction))
             pass
-            RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar, terminalService)
+            RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar,
+                     terminalService)
             print("State!!!")
             print(afStateService.getState())
         elif afStateService.getState() == AutoFlightState.KEYBOARD_CONTROL:
             while True:
                 print("In State")
                 if keyboard.read_key() == "p":
-                    time.sleep(1)
                     print("You pressed p")
                     tello.move_up(20)
-                    time.sleep(1)
-
+                if keyboard.read_key() == "o":
+                    print("You pressed o")
+                    tello.move_down(20)
+                if keyboard.read_key() == "w":
+                    print("You pressed w")
+                    tello.move_forward(20)
+                if keyboard.read_key() == "s":
+                    print("You pressed s")
+                    tello.move_back(20)
+                if keyboard.read_key() == "a":
+                    print("You pressed a")
+                    tello.move_left(20)
+                if keyboard.read_key() == "d":
+                    print("You pressed d")
+                    tello.move_right(20)
+                if keyboard.read_key() == "l":
+                    print("You pressed l")
+                    tello.rotate_clockwise(30)
+                if keyboard.read_key() == "k":
+                    print("You pressed k")
+                    tello.rotate_counter_clockwise(30)
+                if keyboard.read_key() == "c":
+                    print("You pressed c")
+                    terminalService.setKeyboardTrigger(False)
+                    afStateService.testMode()
+                    print("SW to Test")
+                    break
+                # if afStateService.getState() == AutoFlightState.TEST_MODE:
+                #     print("Switch to TEST_MODE")
+                #     break
 
     logger.afp_info("AutoFlightProcess End")
 
@@ -230,4 +259,3 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
     #     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #
     #               佛祖保佑         永無BUG
-
