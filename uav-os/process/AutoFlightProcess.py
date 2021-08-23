@@ -10,7 +10,7 @@ from controller.AutoLandingSecController import AutoLandingSecController, RvecTe
     AutoLandingNewSecController
 from controller.YawAlignmentController import YawAlignmentController
 from controller.AutoLandingThirdController import AutoLandingThirdController
-from controller.TestController import TestMultiAruco
+from controller.TestController import TestMultiArucoYawAlign
 
 # State
 from State.OSStateEnum import OSState
@@ -169,7 +169,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
 
     afStateService.readyTakeOff()
     # TEST_MODE
-    afStateService.testMode()
+    # afStateService.testMode()
 
     """ Main 主程式
     """
@@ -212,9 +212,10 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             # TestSpeedController(tello, telloFrameBFR, cameraCalibArr[0],
             #                     cameraCalibArr[1], afStateService, frameSharedVar)
             # RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar)
-            # AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar, terminalService)
-            TestMultiAruco(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
-                           frameSharedVar, terminalService)
+            # TestMultiArucoYawAlign(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+            #                        frameSharedVar, terminalService)
+            AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                       frameSharedVar, terminalService)
 
     logger.afp_info("AutoFlightProcess End")
 
