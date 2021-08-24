@@ -7,6 +7,7 @@ import keyboard
 import time
 
 # Controller
+from controller.AutoFlightController import autoFlightController
 from controller.AutoLandingController import autoLandingController
 from controller.AutoLandingSecController import AutoLandingSecController, RvecTest, TestSpeedFly, AdjustDistToTarget, \
     AutoLandingNewSecController
@@ -281,6 +282,10 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
                     afStateService.testMode()
                     print("SW to Test")
                     break
+        elif afStateService.getState() == AutoFlightState.FLYING_MODE:
+            # TODO: Function() -> Use to control the E2E aviation
+            autoFlightController(tello, afStateService, logger, terminalService)
+            pass
 
     logger.afp_info("AutoFlightProcess End")
 

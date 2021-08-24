@@ -13,3 +13,5 @@ class AutoFlightState(Enum):
     TEST_MODE = "test_mode"
 
     KEYBOARD_CONTROL = "keyboard_control"
+
+    FLYING_MODE = "flying_mode"
