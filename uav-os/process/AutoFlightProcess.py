@@ -174,16 +174,6 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
     """ Main 主程式
     """
     while True:
-        # Process frame
-        # frame = telloFrameBFR.frame
-        # frame = cv.flip(frame, 1)
-        # frameHeight, frameWidth, _ = frame.shape
-
-        # Force Landing Handler
-        # if FlightCmdService.currentState() == FlightState.FORCE_LAND:
-        #     logger.afp_warning("Force Land commit, System Shutdown")
-        #     break
-
         # Update terminal value
         setTerminal(terminalService, tello)
         if terminalService.getForceLanding() == False and afStateService.getState() == AutoFlightState.FORCE_LANDING:
@@ -192,9 +182,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
         # Auto Flight State Controller
         if afStateService.getState() == AutoFlightState.READY_TAKEOFF:
             # Take Off
-            # cmdUavRunOnce(FlightCmdService, CmdEnum.takeoff, 0)
             tello.takeoff()
-            # tello.move_up(20)
+            tello.move_up(20)
             # afStateService.autoLanding()
             afStateService.testMode()
         elif afStateService.getState() == AutoFlightState.AUTO_LANDING:
@@ -211,9 +200,9 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             # tello.send_rc_control(0, 0, 0, 0)
             # TestSpeedController(tello, telloFrameBFR, cameraCalibArr[0],
             #                     cameraCalibArr[1], afStateService, frameSharedVar)
-            # RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar)
-            # TestMultiArucoYawAlign(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
-            #                        frameSharedVar, terminalService)
+            # RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar, terminalService)
+            TestMultiArucoYawAlign(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                   frameSharedVar, terminalService)
             AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
                                        frameSharedVar, terminalService)
 
