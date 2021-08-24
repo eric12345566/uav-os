@@ -6,9 +6,11 @@ from threading import Thread
 
 # Controller
 from controller.AutoLandingController import autoLandingController
-from controller.AutoLandingSecController import AutoLandingSecController, RvecTest, TestSpeedFly, AdjustDistToTarget, AutoLandingNewSecController
+from controller.AutoLandingSecController import AutoLandingSecController, RvecTest, TestSpeedFly, AdjustDistToTarget, \
+    AutoLandingNewSecController
 from controller.YawAlignmentController import YawAlignmentController
 from controller.AutoLandingThirdController import AutoLandingThirdController
+from controller.TestController import TestMultiArucoYawAlign
 
 # State
 from State.OSStateEnum import OSState
@@ -25,8 +27,10 @@ import process.terminalProcess as tp
 
 # Algo
 from module.algo.loadCoefficients import load_coefficients
-from module.algo.arucoMarkerTrack import arucoTrackWriteFrame
+from module.algo.arucoMarkerTrack import arucoTrackWriteFrame, arucoMultiTrackWriteFrame
 from module.terminalModule import setTerminal
+from module.algo.angleBtw2Points import angleBtw2Points
+
 logger = LoggerService()
 
 
@@ -41,7 +45,8 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
         frameHeight, frameWidth, _ = frame.shape
 
         # markedFrame = arucoMarkerDetectFrame(frame)
-        markCenterX, markCenterY = arucoTrackWriteFrame(cameraCalibArr[0], cameraCalibArr[1], frame)
+        # markCenterX, markCenterY = arucoTrackWriteFrame(cameraCalibArr[0], cameraCalibArr[1], frame)
+        markCenterX, markCenterY, ids = arucoMultiTrackWriteFrame(cameraCalibArr[0], cameraCalibArr[1], frame)
 
         # Center point of frame
         centerX = frameWidth // 2
@@ -49,8 +54,27 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
         frame_center = (centerX, centerY)
         cv.circle(frame, center=(centerX, centerY), radius=5, color=(0, 0, 255), thickness=-1)
 
+        # Rotate Angel
+        RotateAngle = 0
+
+        if (markCenterX is not []) and (markCenterY is not []):
+            markList = [(0, 0), (0, 0)]
+            if ids is not None and len(ids) >= 2:
+                # TODO: 確認是 0 跟 20 再做判斷，目前先不做，因為可能會換 id
+                if ids[0][0] == 0 and ids[1][0] == 20:
+                    markList[0] = (markCenterX[0], markCenterY[0])
+                    markList[1] = (markCenterX[1], markCenterY[1])
+                elif ids[0][0] == 20 and ids[1][0] == 0:
+                    markList[0] = (markCenterX[1], markCenterY[1])
+                    markList[1] = (markCenterX[0], markCenterY[0])
+
+                RotateAngle = angleBtw2Points(markList[0], markList[1])
+
+            cv.arrowedLine(frame, markList[0], markList[1], color=(0, 255, 0), thickness=2)
+
+
         # Draw Line from frame center to AruCo center
-        cv.arrowedLine(frame, frame_center, (markCenterX, markCenterY), color=(0, 255, 0), thickness=2)
+        # cv.arrowedLine(frame, frame_center, (markCenterX, markCenterY), color=(0, 255, 0), thickness=2)
 
         # Put some text into frame
         # cv.putText(frame, f"X Error: {frameSharedVar.getLrError()} PID: {frameSharedVar.getLrPID():.2f}", (20, 30),
@@ -64,17 +88,31 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
         #            cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv.LINE_AA)
 
         # For ArUco Marker new
+        # cv.putText(frame, f"rvec: {frameSharedVar.rvec}", (20, 30),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1,
+        #            (0, 255, 0), 2, cv.LINE_AA)
+        # cv.putText(frame, f"tvec: {frameSharedVar.tvec}", (20, 70),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1,
+        #            (0, 255, 0), 2, cv.LINE_AA)
+
+        # For Angle Test
         cv.putText(frame, f"rvec: {frameSharedVar.rvec}", (20, 30),
                    cv.FONT_HERSHEY_SIMPLEX, 1,
                    (0, 255, 0), 2, cv.LINE_AA)
         cv.putText(frame, f"tvec: {frameSharedVar.tvec}", (20, 70),
                    cv.FONT_HERSHEY_SIMPLEX, 1,
                    (0, 255, 0), 2, cv.LINE_AA)
-
+        cv.putText(frame, f"ids: {ids}", (20, 110),
+                   cv.FONT_HERSHEY_SIMPLEX, 1,
+                   (0, 255, 0), 2, cv.LINE_AA)
+        cv.putText(frame, f"RAngel: {RotateAngle}", (20, 150),
+                   cv.FONT_HERSHEY_SIMPLEX, 1,
+                   (0, 255, 0), 2, cv.LINE_AA)
 
         # Send frame to FrameProcess
         FrameService.setFrame(frame)
         FrameService.setFrameReady()
+
 
 """ Process
 """
@@ -174,7 +212,10 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             # TestSpeedController(tello, telloFrameBFR, cameraCalibArr[0],
             #                     cameraCalibArr[1], afStateService, frameSharedVar)
             # RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar)
-            AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar, terminalService)
+            # TestMultiArucoYawAlign(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+            #                        frameSharedVar, terminalService)
+            AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                       frameSharedVar, terminalService)
 
     logger.afp_info("AutoFlightProcess End")
 
