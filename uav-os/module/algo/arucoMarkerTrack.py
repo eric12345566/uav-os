@@ -49,6 +49,7 @@ def arucoMarkerSelectPoseEstimate(selectID, matrix_coefficients, distortion_coef
     centerY = 0
     rvec = 0
     tvec = 0
+    haveMarker = False
 
     # operations on the frame come here
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # Change grayscale
@@ -63,6 +64,7 @@ def arucoMarkerSelectPoseEstimate(selectID, matrix_coefficients, distortion_coef
     if np.all(ids is not None):  # If there are markers found by detector
         for i in range(0, len(ids)):  # Iterate in markers
             if ids[i] == [selectID]:
+                haveMarker = True
                 # Estimate pose of each marker and return the values rvec and tvec---different from camera coefficients
                 rvec, tvec, markerPoints = aruco.estimatePoseSingleMarkers(corners[i], 0.08, matrix_coefficients,
                                                                            distortion_coefficients)
@@ -82,7 +84,8 @@ def arucoMarkerSelectPoseEstimate(selectID, matrix_coefficients, distortion_coef
         centerY = None
         rvec = None
         tvec = None
-    return centerX, centerY, rvec, tvec, ids
+        haveMarker = False
+    return centerX, centerY, rvec, tvec, haveMarker
 
 
 def arucoMultiTrackPostEstimate(matrix_coefficients, distortion_coefficients, frame):
