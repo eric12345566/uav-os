@@ -247,6 +247,9 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             print(afStateService.getState())
         elif afStateService.getState() == AutoFlightState.KEYBOARD_CONTROL:
             while True:
+
+                # Update terminal value
+                setTerminal(terminalService, tello)
                 print("In State")
                 if keyboard.read_key() == "p":
                     print("You pressed p")
@@ -278,9 +281,6 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
                     afStateService.testMode()
                     print("SW to Test")
                     break
-                # if afStateService.getState() == AutoFlightState.TEST_MODE:
-                #     print("Switch to TEST_MODE")
-                #     break
 
     logger.afp_info("AutoFlightProcess End")
 
