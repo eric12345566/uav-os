@@ -7,6 +7,7 @@ import process.ControllerProcess as ctrp
 import process.FrameProcess as fp
 import process.AutoFlightProcess as afp
 import process.terminalProcess as tp
+import process.CarSocketServerProcess as cssp
 import process.MarkedFrameProcess as mfp
 
 # Class
@@ -15,6 +16,7 @@ from classes.FrameClass import FrameClass
 # Service
 from service.terminalService import terminalService
 from service.OSStateService import OSStateService
+from service.CarSocketService import CarSocketService
 from service.FlightCmdService import FlightCmdService
 
 if __name__ == '__main__':
@@ -26,6 +28,7 @@ if __name__ == '__main__':
     BaseManager.register('terminalService', terminalService)
     BaseManager.register('frameClass', FrameClass)
     BaseManager.register('osStateService', OSStateService)
+    BaseManager.register( 'carSocketService', CarSocketService)
     # BaseManager.register('flightCmdService', FlightCmdService)
     manager = BaseManager()
     manager.start()
@@ -35,6 +38,7 @@ if __name__ == '__main__':
     terminalService = manager.terminalService()
     frameService = manager.frameClass()
     osStateService = manager.osStateService()
+    carSocketService = manager.carSocketService()
     # flightCmdService = manager.flightCmdService()
 
     '''OS環境變數：test 狀態下不會啟動 Tello 與 openCV
@@ -46,6 +50,7 @@ if __name__ == '__main__':
     '''
     afpProcess = mp.Process(target=afp.AutoFlightProcess, args=(frameService, osStateService, terminalService,))
     tpProcess = mp.Process(target=tp.terminalProcess, args=(terminalService,))
+    cssProcess = mp.Process(target=cssp.CarSocketServerProcess, args=(carSocketService,))
     if osStateService.getMode() != "test":
         frameProcess = mp.Process(target=fp.FrameProcess, args=(frameService, osStateService,))
     else:
@@ -62,6 +67,7 @@ if __name__ == '__main__':
     '''
     tpProcess.start()
     afpProcess.start()
+    cssProcess.start()
     frameProcess.start()
     # ctrProcess.start()
 
@@ -69,6 +75,7 @@ if __name__ == '__main__':
     '''
     tpProcess.join()
     afpProcess.join()
+    cssProcess.join()
     frameProcess.join()
     # ctrProcess.join()
 

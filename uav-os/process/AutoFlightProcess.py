@@ -233,8 +233,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             # RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar)
             # TestMultiArucoYawAlign(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
             #                        frameSharedVar, terminalService)
-            AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
-                                       frameSharedVar, terminalService)
+            # AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+            #                            frameSharedVar, terminalService)
 
             tello.send_rc_control(0, 0, 0, 0)
             print('-------------------Position--------------------')
