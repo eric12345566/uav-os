@@ -3,6 +3,8 @@ import time
 import cv2 as cv
 from djitellopy import Tello
 from threading import Thread
+import keyboard
+import time
 
 # Controller
 from controller.AutoLandingController import autoLandingController
@@ -24,11 +26,17 @@ from service.AutoFlightStateService import AutoFlightStateService
 from module.BackgroundFrameRead import BackgroundFrameRead
 from module.FrameSharedVar import FrameSharedVar
 import process.terminalProcess as tp
+from module.IndoorLocationShared import IndoorLocationShared
+
+# Worker
+import worker.indoorLocationWorker as iLWorker
 
 # Algo
 from module.algo.loadCoefficients import load_coefficients
 from module.algo.arucoMarkerTrack import arucoTrackWriteFrame, arucoMultiTrackWriteFrame
+from module.algo.arucoMarkerDetect import arucoMarkerDetectFrame
 from module.terminalModule import setTerminal
+from module.indoorLocationAlgo.QrcodePositionAlgo import streamDecode
 from module.algo.angleBtw2Points import angleBtw2Points
 
 logger = LoggerService()
@@ -138,7 +146,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
     tello.streamoff()
     tello.streamon()
 
-    # Get Frame from UDP using BackgroundFrameRead class (thread)
+    # Get Frame from UDP using BackgroundFrameRead class (thread)ㄒ
     telloUDPAddr = tello.get_udp_video_address()
     telloFrameBFR = BackgroundFrameRead(telloUDPAddr)
     telloFrameBFR.start()
@@ -156,6 +164,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
     frameSendWorker.start()
 
     # ------------------ AutoFlightProcess is ready, init code End --------------------
+
     OSStateService.autoFlightInitReady()
     logger.afp_debug("AutoFlightProcess Start")
 
@@ -163,11 +172,20 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
     while OSStateService.getCurrentState() == OSState.INITIALIZING:
         pass
 
+    # 室內定位座標 Worker 與 室內定位座標 var 共享物件
+    # TODO: 增加 terminalService 進去indoorLocationWorker
+    indoorLocationSharedVar = IndoorLocationShared()
+    indoorLocationWorker = Thread(target=iLWorker.indoorLocationWorker,
+                                  args=(telloFrameBFR, indoorLocationSharedVar, terminalService, tello), daemon=True)
+    indoorLocationWorker.start()
+
     """ State
     """
     afStateService = AutoFlightStateService()
 
     afStateService.readyTakeOff()
+
+    # TODO: 把TestMode
     # TEST_MODE
     # afStateService.testMode()
 
@@ -205,7 +223,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             afStateService.end()
             pass
         elif afStateService.getState() == AutoFlightState.END:
-            pass
+            logger.afp_info("AFP End")
+            break
         elif afStateService.getState() == AutoFlightState.TEST_MODE:
             # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger)
             # tello.send_rc_control(0, 0, 0, 0)
@@ -217,7 +236,80 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
                                        frameSharedVar, terminalService)
 
+            tello.send_rc_control(0, 0, 0, 0)
+            print('-------------------Position--------------------')
+            print(str(indoorLocationSharedVar.getLocation()))
+            # print(str(indoorLocationShared.x_location), str(indoorLocationShared.y_location), str(indoorLocationShared.direction))
+            pass
+            RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar,
+                     terminalService)
+            print("State!!!")
+            print(afStateService.getState())
+        elif afStateService.getState() == AutoFlightState.KEYBOARD_CONTROL:
+            while True:
+                print("In State")
+                if keyboard.read_key() == "p":
+                    print("You pressed p")
+                    tello.move_up(20)
+                if keyboard.read_key() == "o":
+                    print("You pressed o")
+                    tello.move_down(20)
+                if keyboard.read_key() == "w":
+                    print("You pressed w")
+                    tello.move_forward(20)
+                if keyboard.read_key() == "s":
+                    print("You pressed s")
+                    tello.move_back(20)
+                if keyboard.read_key() == "a":
+                    print("You pressed a")
+                    tello.move_left(20)
+                if keyboard.read_key() == "d":
+                    print("You pressed d")
+                    tello.move_right(20)
+                if keyboard.read_key() == "l":
+                    print("You pressed l")
+                    tello.rotate_clockwise(30)
+                if keyboard.read_key() == "k":
+                    print("You pressed k")
+                    tello.rotate_counter_clockwise(30)
+                if keyboard.read_key() == "c":
+                    print("You pressed c")
+                    terminalService.setKeyboardTrigger(False)
+                    afStateService.testMode()
+                    print("SW to Test")
+                    break
+                # if afStateService.getState() == AutoFlightState.TEST_MODE:
+                #     print("Switch to TEST_MODE")
+                #     break
+
     logger.afp_info("AutoFlightProcess End")
+
+    # Stop indoorLocationWorker
+    indoorLocationWorker.join()
 
     # Stop frameSendWorker
     frameSendWorker.join()
+
+    #                       _oo0oo_
+    #                      o8888888o
+    #                      88" . "88
+    #                      (| -_- |)
+    #                      0\  =  /0
+    #                    ___/`---'\___
+    #                  .' \\|     |// '.
+    #                 / \\|||  :  |||// \
+    #                / _||||| -:- |||||- \
+    #               |   | \\\  -  /// |   |
+    #               | \_|  ''\---/''  |_/ |
+    #               \  .-\__  '-'  ___/-. /
+    #             ___'. .'  /--.--\  `. .'___
+    #          ."" '<  `.___\_<|>_/___.' >' "".
+    #         | | :  `- \`.;`\ _ /`;.`/ - ` : | |
+    #         \  \ `_.   \_ __\ /__ _/   .-` /  /
+    #     =====`-.____`.___ \_____/___.-`___.-'=====
+    #                       `=---='
+    #
+    #
+    #     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #
+    #               佛祖保佑         永無BUG

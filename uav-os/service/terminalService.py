@@ -1,6 +1,6 @@
-
 class terminalService(object):
 
+    # TODO:串接資料
     def __init__(self):
         # init tello parameter
         self.tello_pitch = 0
@@ -13,10 +13,17 @@ class terminalService(object):
         self.barometer = 0
         # force landing
         self.forceLanding = False
+        # Tello Control toggle
+        self.keyboardTrigger = False
+        self.position_rotate = 0
+        self.position_x = 0
+        self.position_y = 0
+        self.tello_high = 0
 
     """
         Utility function
     """
+
     def setInfo(self, key, value):
         if key == 'pitch':
             self.tello_pitch = value
@@ -34,6 +41,14 @@ class terminalService(object):
             self.average_temperature = value
         elif key == 'barometer':
             self.barometer = value
+        elif key == 'rotate':
+            self.position_rotate = value
+        elif key == 'position_X':
+            self.position_x = value
+        elif key == 'position_Y':
+            self.position_y = value
+        elif key == 'high':
+            self.tello_high = value
 
     def getInfo(self, key):
         if key == 'pitch':
@@ -52,6 +67,14 @@ class terminalService(object):
             return self.average_temperature
         elif key == 'barometer':
             return self.barometer
+        elif key == 'rotate':
+            return self.position_rotate
+        elif key == 'position_X':
+            return self.position_x
+        elif key == 'position_Y':
+            return self.position_y
+        elif key == 'high':
+            return self.tello_high
         return 0
 
     def setForceLanding(self, state):
@@ -59,3 +82,9 @@ class terminalService(object):
 
     def getForceLanding(self):
         return self.forceLanding
+
+    def setKeyboardTrigger(self, state):
+        self.keyboardTrigger = state
+
+    def getKeyboardTrigger(self):
+        return self.keyboardTrigger

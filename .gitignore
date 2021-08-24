@@ -299,6 +299,9 @@ $RECYCLE.BIN/
 *.msm
 *.msp
 
+# PYC
+*.pyc
+
 # Windows shortcuts
 *.lnk
 

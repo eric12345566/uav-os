@@ -222,8 +222,17 @@ def AutoLandingSecController(tello, telloFrameBFR, matrix_coefficients, distorti
 def RvecTest(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, afStateService, frameSharedVar, terminalService):
 
     while True:
+
+        tello.send_rc_control(0, 0, 0, 0)
         # Update terminal value
         setTerminal(terminalService, tello)
+        if terminalService.getForceLanding():
+            afStateService.forceLanding()
+            tello.land()
+            break
+        if terminalService.getKeyboardTrigger():
+            afStateService.keyboardControl()
+            break
 
         # Process frame
         frame = telloFrameBFR.frame
