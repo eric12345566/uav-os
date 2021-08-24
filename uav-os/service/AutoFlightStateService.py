@@ -42,3 +42,7 @@ class AutoFlightStateService(object):
     # Keyboard Control
     def keyboardControl(self):
         self.State = AutoFlightState.KEYBOARD_CONTROL
+
+    # AutoFlight
+    def autoFlight(self):
+        self.State = AutoFlightState.FLYING_MODE

@@ -215,7 +215,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             tello.takeoff()
             # tello.move_up(20)
             # afStateService.autoLanding()
-            afStateService.testMode()
+            afStateService.autoFlight()
         elif afStateService.getState() == AutoFlightState.AUTO_LANDING:
             # Landing procedure
             autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger, terminalService)
