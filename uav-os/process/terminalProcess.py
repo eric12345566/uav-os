@@ -52,11 +52,11 @@ class Begueradj():
 
         self.time_title.grid(column=0, row=0, sticky=self.align_mode)
         self.lbl_title2.grid(column=0, row=1, sticky=self.align_mode)
-
+        # TODO:加入Button
         # div3
         self.bt1 = tkinter.Button(self.div3, text='Force land', command=self.auto_landing, bg='green', fg='white', font=self.general_font)
         self.bt2 = tkinter.Button(self.div3, text='Take off', command=self.ready_takeOff, bg='green', fg='white', font=self.general_font)
-        self.bt3 = tkinter.Button(self.div3, text='Button 3', bg='green', fg='white', font=self.general_font)
+        self.bt3 = tkinter.Button(self.div3, text='Trigger Keyboard', command=self.keyboard_trigger, bg='green', fg='white', font=self.general_font)
         self.bt4 = tkinter.Button(self.div3, text='Button 4', bg='green', fg='white', font=self.general_font)
 
         self.bt1.grid(column=0, row=0, sticky=self.align_mode)
@@ -92,11 +92,23 @@ class Begueradj():
                            font=self.general_font)
         self.lbl_barometer = tkinter.Label(self.div1_body, text='', bg='#93BFEB', fg='#263238',
                                  font=self.general_font)
+        self.lbl_rotate = tkinter.Label(self.div1_body, text='', bg='#93BFEB', fg='#263238',
+                                           font=self.general_font)
+        self.lbl_high = tkinter.Label(self.div1_body, text='', bg='#93BFEB', fg='#263238',
+                                           font=self.general_font)
+        self.lbl_position_x = tkinter.Label(self.div1_body, text='', bg='#93BFEB', fg='#263238',
+                                        font=self.general_font)
+        self.lbl_position_y = tkinter.Label(self.div1_body, text='', bg='#93BFEB', fg='#263238',
+                                        font=self.general_font)
 
         self.lbl_pitch.grid(column=0, row=0, padx=self.pad_font, pady=self.pad_font, sticky='w')
         self.lbl_roll.grid(column=0, row=1, padx=self.pad_font, pady=self.pad_font, sticky='w')
         self.lbl_yaw.grid(column=0, row=2, padx=self.pad_font, pady=self.pad_font, sticky='w')
         self.lbl_barometer.grid(column=0, row=3, padx=self.pad_font, pady=self.pad_font, sticky='w')
+        self.lbl_rotate.grid(column=0, row=4, padx=self.pad_font, pady=self.pad_font, sticky='w')
+        self.lbl_high.grid(column=0, row=5, padx=self.pad_font, pady=self.pad_font, sticky='w')
+        self.lbl_position_x.grid(column=0, row=6, padx=self.pad_font, pady=self.pad_font, sticky='w')
+        self.lbl_position_y.grid(column=0, row=7, padx=self.pad_font, pady=self.pad_font, sticky='w')
 
         # div1 battery
         self.lbl_battery_percentage = tkinter.Label(self.div1_battery, text='',
@@ -110,6 +122,13 @@ class Begueradj():
     def ready_takeOff(self):
         self.terminalService.setForceLanding(False)
 
+    def keyboard_trigger(self):
+        print('trigger!!!')
+        if not self.terminalService.getKeyboardTrigger():
+            self.terminalService.setKeyboardTrigger(True)
+            print("SW to Control")
+
+
     def getTime(self):
         self.tello_pitch = self.terminalService.getInfo('pitch')
         self.tello_roll = self.terminalService.getInfo('roll')
@@ -119,11 +138,19 @@ class Begueradj():
         self.highest_temperature = self.terminalService.getInfo('high_temperature')
         self.average_temperature = self.terminalService.getInfo('temperature')
         self.tello_barometer = self.terminalService.getInfo('barometer')
+        self.position_rotate = self.terminalService.getInfo('rotate')
+        self.tello_high = self.terminalService.getInfo('high')
+        self.position_x = self.terminalService.getInfo('position_X')
+        self.position_y = self.terminalService.getInfo('position_Y')
         self.time_title.config(text=time.strftime("%H:%M:%S"))  # 获取当前时间
         self.lbl_yaw.config(text='Tello yaw: ' + str(self.tello_yaw))
         self.lbl_roll.config(text='Tello roll: ' + str(self.tello_roll))
         self.lbl_pitch.config(text='Tello pitch: ' + str(self.tello_pitch))
         self.lbl_barometer.config(text='Tello barometer: ' + str(int(self.tello_barometer)))
+        self.lbl_rotate.config(text='Tello rotate: ' + str(int(self.position_rotate)))
+        self.lbl_high.config(text='Tello High: ' + str(int(self.tello_high)))
+        self.lbl_position_x.config(text='Tello Position X: ' + str(int(self.position_x)))
+        self.lbl_position_y.config(text='Tello Position Y: ' + str(int(self.position_y)))
         self.lbl_high_temp.config(text='Highest temperature: ' + str(self.highest_temperature))
         self.lbl_low_temp.config(text='Lowest temperature: ' + str(self.lowest_temperature))
         self.lbl_avg_temp.config(text='Average temperature: ' + str(self.average_temperature))
