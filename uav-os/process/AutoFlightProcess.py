@@ -215,7 +215,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             tello.takeoff()
             # tello.move_up(20)
             # afStateService.autoLanding()
-            afStateService.autoFlight()
+            afStateService.testMode()
         elif afStateService.getState() == AutoFlightState.AUTO_LANDING:
             # Landing procedure
             autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger, terminalService)
@@ -234,8 +234,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             # RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar)
             # TestMultiArucoYawAlign(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
             #                        frameSharedVar, terminalService)
-            AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
-                                       frameSharedVar, terminalService)
+            # AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+            #                            frameSharedVar, terminalService)
 
             tello.send_rc_control(0, 0, 0, 0)
             print('-------------------Position--------------------')
@@ -281,6 +281,12 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
                     terminalService.setKeyboardTrigger(False)
                     afStateService.testMode()
                     print("SW to Test")
+                    break
+                if keyboard.read_key() == "z":
+                    print("You pressed z")
+                    terminalService.setKeyboardTrigger(False)
+                    afStateService.autoFlight()
+                    print("SW to autoFlight")
                     break
         elif afStateService.getState() == AutoFlightState.FLYING_MODE:
             # TODO: Function() -> Use to control the E2E aviation
