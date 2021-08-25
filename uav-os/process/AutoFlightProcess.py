@@ -11,6 +11,7 @@ from controller.AutoLandingSecController import AutoLandingSecController, RvecTe
 from controller.YawAlignmentController import YawAlignmentController
 from controller.AutoLandingThirdController import AutoLandingThirdController
 from controller.TestController import TestMultiArucoYawAlign
+from controller.FindArucoController import FindArucoController
 
 # State
 from State.OSStateEnum import OSState
@@ -71,7 +72,6 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
                 RotateAngle = angleBtw2Points(markList[0], markList[1])
 
             cv.arrowedLine(frame, markList[0], markList[1], color=(0, 255, 0), thickness=2)
-
 
         # Draw Line from frame center to AruCo center
         # cv.arrowedLine(frame, frame_center, (markCenterX, markCenterY), color=(0, 255, 0), thickness=2)
@@ -201,10 +201,15 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             # TestSpeedController(tello, telloFrameBFR, cameraCalibArr[0],
             #                     cameraCalibArr[1], afStateService, frameSharedVar)
             # RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar, terminalService)
-            TestMultiArucoYawAlign(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
-                                   frameSharedVar, terminalService)
-            AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
-                                       frameSharedVar, terminalService)
+
+            # TestMultiArucoYawAlign(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+            #                        frameSharedVar, terminalService)
+
+            # AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+            #                            frameSharedVar, terminalService)
+
+            FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                frameSharedVar, terminalService)
 
     logger.afp_info("AutoFlightProcess End")
 
