@@ -7,4 +7,4 @@ class CarSocketService(object):
         self.position = position
 
     def getPosition(self):
-        return self.position
+        return int(self.position)
