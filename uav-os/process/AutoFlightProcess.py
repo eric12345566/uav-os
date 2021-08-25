@@ -183,7 +183,6 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
         if afStateService.getState() == AutoFlightState.READY_TAKEOFF:
             # Take Off
             tello.takeoff()
-            tello.move_up(20)
             # afStateService.autoLanding()
             afStateService.testMode()
         elif afStateService.getState() == AutoFlightState.AUTO_LANDING:
