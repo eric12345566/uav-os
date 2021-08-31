@@ -12,10 +12,9 @@ def autoFlightController(tello, afStateService, logger, terminalService):
         x = terminalService.getInfo('position_X')
         y = terminalService.getInfo('position_Y')
 
-        if x == 70 and y == 70:
+        if (x, y) == (70, 70):
             print("Reach Destination")
-            tello.move_forward(30)
+            tello.move_forward(20)
             tello.land()
-            afStateService.end()
             break
         time.sleep(0.2)
