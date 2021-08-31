@@ -16,7 +16,7 @@ from module.terminalModule import setTerminal
 logger = LoggerService()
 
 
-def AlignArucoPIDController(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, afStateService, frameSharedVar, terminalService):
+def ArucoPIDLandingController(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, afStateService, frameSharedVar, terminalService):
     lrPID = PID(0.3, 0.0001, 0.1)
     lrPID.output_limits = (-100, 100)
     fbPID = PID(0.3, 0.0001, 0.1)
@@ -141,7 +141,7 @@ def AlignArucoPIDController(tello, telloFrameBFR, matrix_coefficients, distortio
                 left_right_velocity = 0
 
         else:
-            # 否則，回到 FindArucoController 嘗試盲找降落點
+            # 否則，嘗試盲找降落點
             break
 
         # 將 isFrameCenterInMarker 分享給 FrameWorker
@@ -152,9 +152,36 @@ def AlignArucoPIDController(tello, telloFrameBFR, matrix_coefficients, distortio
             if not canLanding:
                 tello.send_rc_control(left_right_velocity, for_back_velocity, up_down_velocity, yaw_velocity)
             else:
-                # 已經對準，此controller已經完成
-                afStateService.yaw_align()
-                break
+                tello.send_rc_control(left_right_velocity, for_back_velocity, up_down_velocity, yaw_velocity)
+                # 已經對準到可以下降的狀況，進行下降
+                now_height = tello.get_distance_tof()
+                logger.afp_debug("now_height: " + str(now_height))
+                frameSharedVar.landHeight = now_height
+                move_down_cm = 0
+
+                # 檢查高度來決定下降方式
+                if 20 <= now_height <= 30:
+                    # 如果高度已經在 20 ~ 30 cm 之間，直接下降
+                    tello.land()
+                    afStateService.landed()
+                    break
+                else:
+                    # 否則，先降低一點高度
+                    if now_height // 2 > 30:
+                        move_down_cm = int(now_height - now_height // 2)
+                        logger.afp_debug("move_down_cm: " + str(move_down_cm))
+                        tello.move_down(move_down_cm)
+                    else:
+                        move_down_cm = int(now_height - 30)
+                        if move_down_cm < 20:
+                            tello.land()
+                            afStateService.landed()
+                            break
+                        else:
+                            logger.afp_debug("move_down_cm: " + str(move_down_cm))
+                            tello.move_down(move_down_cm)
+
+                canLanding = False
         else:
             pass
         # 控制辨識幀率

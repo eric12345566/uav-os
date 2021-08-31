@@ -10,8 +10,9 @@ from controller.AutoLandingSecController import AutoLandingSecController, RvecTe
     AutoLandingNewSecController
 from controller.YawAlignmentController import YawAlignmentController
 from controller.AutoLandingThirdController import AutoLandingThirdController
-from controller.TestController import TestMultiArucoYawAlign
+from controller.YawAlignMultiArucoController import YawAlignMultiArucoController
 from controller.FindArucoController import FindArucoController
+from controller.ArucoPIDLandingController import ArucoPIDLandingController
 
 # State
 from State.OSStateEnum import OSState
@@ -184,10 +185,23 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             # Take Off
             tello.takeoff()
             # afStateService.autoLanding()
-            afStateService.testMode()
+            # afStateService.testMode()
+            afStateService.finding_aruco()
+        elif afStateService.getState() == AutoFlightState.FINDING_ARUCO:
+            logger.afp_debug("in Finding_aruco")
+            FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                frameSharedVar, terminalService)
+
+        elif afStateService.getState() == AutoFlightState.YAW_ALIGN:
+            logger.afp_debug("in yaw_alignment")
+            YawAlignMultiArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                         frameSharedVar, terminalService)
+            afStateService.autoLanding()
         elif afStateService.getState() == AutoFlightState.AUTO_LANDING:
             # Landing procedure
-            autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger, terminalService)
+            # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger, terminalService)
+            ArucoPIDLandingController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                      frameSharedVar, terminalService)
         elif afStateService.getState() == AutoFlightState.LANDED:
             logger.afp_debug("State: Landed")
             afStateService.end()

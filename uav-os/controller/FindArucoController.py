@@ -4,7 +4,7 @@ import time
 from enum import Enum
 
 # module & algo
-
+from State.AutoFlightStateEnum import AutoFlightState
 from module.algo.arucoMarkerTrack import arucoTrackPostEstimate, arucoMarkerSelectPoseEstimate
 from service.LoggerService import LoggerService
 from module.terminalModule import setTerminal
@@ -74,7 +74,7 @@ def FindArucoController(tello, telloFrameBFR, matrix_coefficients, distortion_co
             if not isSetTimer:
                 # 決定搜尋方向
                 searchDirection, sleepTime = autoSwitchDirection(searchDirection, sleepTime)
-                logger.afp_debug("direction: " + str(searchDirection))
+                # logger.afp_debug("direction: " + str(searchDirection))
 
                 if searchDirection == Direction.right:
                     timer.setTimer(sleepTime)
@@ -98,7 +98,7 @@ def FindArucoController(tello, telloFrameBFR, matrix_coefficients, distortion_co
 
             # 如果時間到，就停下tello，重跑迴圈
             if timer.isTimesUp():
-                logger.afp_debug("isTimeUp")
+                # logger.afp_debug("isTimeUp")
                 tello.send_rc_control(0, 0, 0, 0)
                 time.sleep(1)
                 isSetTimer = False
@@ -106,4 +106,7 @@ def FindArucoController(tello, telloFrameBFR, matrix_coefficients, distortion_co
         else:
             AlignArucoPIDController(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, afStateService,
                                     frameSharedVar, terminalService)
+            if afStateService.getState() == AutoFlightState.YAW_ALIGN:
+                break
+
 
