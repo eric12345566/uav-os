@@ -142,12 +142,7 @@ def AlignArucoPIDController(tello, telloFrameBFR, matrix_coefficients, distortio
 
         else:
             # 否則，嘗試盲找降落點
-            left_right_velocity = 0
-            up_down_velocity = 0
-            for_back_velocity = 0
-            isFrameCenterInMarker = -2
-            LandAlreadyRecord = False
-            landingStartTime = 0
+            break
 
         # 將 isFrameCenterInMarker 分享給 FrameWorker
         frameSharedVar.isFrameCenterInMarker = isFrameCenterInMarker
@@ -188,5 +183,5 @@ def AlignArucoPIDController(tello, telloFrameBFR, matrix_coefficients, distortio
 
                 canLanding = False
         else:
-            break
+            pass
         # 控制辨識幀率

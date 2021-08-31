@@ -26,19 +26,25 @@ class Direction(Enum):
     backward = "backward"
 
 
-def autoSwitchDirection(direction):
+def autoSwitchDirection(direction, sleepTime):
+    direct = direction
+    sTime = sleepTime
+
     if direction == Direction.start:
-        return Direction.up
+        direct = Direction.up
     elif direction == Direction.up:
-        return Direction.right
+        sTime = sleepTime + 1
+        direct = Direction.right
     elif direction == Direction.right:
-        return Direction.forward
+        direct = Direction.forward
     elif direction == Direction.forward:
-        return Direction.left
+        sTime = sleepTime + 1
+        direct = Direction.left
     elif direction == Direction.left:
-        return Direction.backward
+        direct = Direction.backward
     elif direction == Direction.backward:
-        return Direction.start
+        direct = Direction.up
+    return direct, sTime
 
 
 def FindArucoController(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, afStateService,
@@ -46,6 +52,7 @@ def FindArucoController(tello, telloFrameBFR, matrix_coefficients, distortion_co
     isSetTimer = False
     timer = AsyncTimer()
     searchDirection = Direction.start
+    sleepTime = 0
 
     while True:
         # Process frame
@@ -66,20 +73,20 @@ def FindArucoController(tello, telloFrameBFR, matrix_coefficients, distortion_co
             # 設定 Timer
             if not isSetTimer:
                 # 決定搜尋方向
-                searchDirection = autoSwitchDirection(searchDirection)
+                searchDirection, sleepTime = autoSwitchDirection(searchDirection, sleepTime)
                 logger.afp_debug("direction: " + str(searchDirection))
 
                 if searchDirection == Direction.right:
-                    timer.setTimer(2)
+                    timer.setTimer(sleepTime)
                     tello.send_rc_control(20, 0, 0, 0)
                 elif searchDirection == Direction.left:
-                    timer.setTimer(4)
+                    timer.setTimer(sleepTime)
                     tello.send_rc_control(-20, 0, 0, 0)
                 elif searchDirection == Direction.forward:
-                    timer.setTimer(2)
+                    timer.setTimer(sleepTime)
                     tello.send_rc_control(0, 20, 0, 0)
                 elif searchDirection == Direction.backward:
-                    timer.setTimer(4)
+                    timer.setTimer(sleepTime)
                     tello.send_rc_control(0, -20, 0, 0)
                 elif searchDirection == Direction.up:
                     timer.setTimer(4)
