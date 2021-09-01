@@ -229,8 +229,10 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, carSocketSe
         elif afStateService.getState() == AutoFlightState.AUTO_LANDING:
             # Landing procedure
             # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger, terminalService)
-            ArucoPIDLandingController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
-                                      frameSharedVar, terminalService)
+            # ArucoPIDLandingController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+            #                           frameSharedVar, terminalService)
+            AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                       frameSharedVar, terminalService)
         elif afStateService.getState() == AutoFlightState.LANDED:
             carSocketService.setLandingStatus( 'true' )
             logger.afp_debug("State: Landed")
@@ -252,8 +254,11 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, carSocketSe
             # AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
             #                            frameSharedVar, terminalService)
 
-            FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
-                                frameSharedVar, terminalService)
+            # FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+            #                     frameSharedVar, terminalService)
+            YawAlignMultiArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                         frameSharedVar, terminalService)
+            tello.land()
 
     logger.afp_info("AutoFlightProcess End")
 
