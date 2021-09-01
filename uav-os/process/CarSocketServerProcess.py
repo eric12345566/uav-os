@@ -9,12 +9,11 @@ def CarSocketServerProcess( CarSocketService ):
     server.listen(10)
     while True:
         conn, addr = server.accept()
-        # print(type(conn.recv(1024)))
         clientMessage = str(conn.recv(1024), encoding='utf-8')
         CarSocketService.setPosition( clientMessage )
-        clientMessage = CarSocketService.getPosition()
+        # clientMessage = CarSocketService.getPosition()
         print('Client message is:', clientMessage)
 
-        serverMessage = 'I\'m here!'
+        serverMessage = 'Socket connection is successful'
         conn.sendall(serverMessage.encode())
         conn.close()
