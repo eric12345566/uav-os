@@ -47,6 +47,8 @@ def arucoIdsFindHelper(ids, requiredId):
 
 def YawAlignMultiArucoController(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, afStateService, frameSharedVar, terminalService):
     alignComplete = False
+    alignNumber = 1
+    yawSpeedSet = 30
     while True:
         # Update terminal value
         setTerminal(terminalService, tello)
@@ -73,16 +75,12 @@ def YawAlignMultiArucoController(tello, telloFrameBFR, matrix_coefficients, dist
                 markList[0] = (centerXList[mMarkerIndex[0]], centerYList[mMarkerIndex[0]])
                 markList[1] = (centerXList[rMarkerIndex[0]], centerYList[rMarkerIndex[0]])
                 rotateAngle = int(angleBtw2Points(markList[0], markList[1]))
-                logger.afp_debug("rotateAngle: " + str(rotateAngle))
                 yaw_speed = 0
-                if 0 <= rotateAngle <= 90 or -86 < rotateAngle < 0:
-                    logger.afp_debug("state 1")
-                    yaw_speed = 30
-                elif 90 < rotateAngle <= 180 or -180 < rotateAngle < -94:
-                    logger.afp_debug("state 2")
-                    yaw_speed = -30
-                elif -94 <= rotateAngle <= -86:
-                    logger.afp_debug("state 3")
+                if 0 <= rotateAngle <= 90 or -88 < rotateAngle < 0:
+                    yaw_speed = yawSpeedSet
+                elif 90 < rotateAngle <= 180 or -180 < rotateAngle < -92:
+                    yaw_speed = -yawSpeedSet
+                elif -92 <= rotateAngle <= -88:
                     yaw_speed = 0
                     alignComplete = True
 
@@ -90,6 +88,13 @@ def YawAlignMultiArucoController(tello, telloFrameBFR, matrix_coefficients, dist
 
         # 如果對準
         if alignComplete:
-            logger.afp_debug("yaw align complete")
-            break
+            if alignNumber < 3:
+                alignNumber = alignNumber + 1
+                logger.afp_debug("alignNumber: " + str(alignNumber))
+                yawSpeedSet = yawSpeedSet - 10
+                time.sleep(0.5)
+                alignComplete = False
+                continue
+            else:
+                break
 
