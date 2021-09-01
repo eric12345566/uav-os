@@ -23,6 +23,9 @@ class AutoFlightStateService(object):
     def autoLanding(self):
         self.State = AutoFlightState.AUTO_LANDING
 
+    def waitBusArrive(self):
+        self.State = AutoFlightState.WAIT_BUS_ARRIVE
+
     def finding_aruco(self):
         self.State = AutoFlightState.FINDING_ARUCO
 

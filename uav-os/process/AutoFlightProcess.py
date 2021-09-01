@@ -127,7 +127,7 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
 """
 
 
-def AutoFlightProcess(FrameService, OSStateService, terminalService):
+def AutoFlightProcess(FrameService, OSStateService, terminalService, carSocketService):
     # <Deprecated: 拋棄 Controller Process> Wait for Controller Ready, and get the frame
     # while not OSStateService.getControllerInitState():
     #     pass
@@ -184,8 +184,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
     """
     afStateService = AutoFlightStateService()
 
-    afStateService.readyTakeOff()
-
+    afStateService.waitBusArrive()
+    # afStateService.readyTakeOff()
     # TODO: 把TestMode
     # TEST_MODE
     # afStateService.testMode()
@@ -199,12 +199,23 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             afStateService.readyTakeOff()
 
         # Auto Flight State Controller
-        if afStateService.getState() == AutoFlightState.READY_TAKEOFF:
+        if afStateService.getState() == AutoFlightState.WAIT_BUS_ARRIVE:
+            while( carSocketService.getPosition() != 'A3'):
+                carSocketService.setLandingStatus( 'false' )
+                pass
+            afStateService.readyTakeOff()
+
+        elif afStateService.getState() == AutoFlightState.READY_TAKEOFF:
             # Take Off
             tello.takeoff()
+            time.sleep(5)
+            tello.move_forward(80)
+            time.sleep(2)
+
             # afStateService.autoLanding()
             # afStateService.testMode()
             afStateService.finding_aruco()
+
         elif afStateService.getState() == AutoFlightState.FINDING_ARUCO:
             logger.afp_debug("in Finding_aruco")
             FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
@@ -221,6 +232,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             ArucoPIDLandingController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
                                       frameSharedVar, terminalService)
         elif afStateService.getState() == AutoFlightState.LANDED:
+            carSocketService.setLandingStatus( 'true' )
             logger.afp_debug("State: Landed")
             afStateService.end()
             pass

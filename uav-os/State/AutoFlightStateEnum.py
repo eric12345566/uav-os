@@ -9,6 +9,8 @@ class AutoFlightState(Enum):
     LANDED = "landed"
     YAW_ALIGN = "yaw_align"
     FINDING_ARUCO = "finding_marker"
+    WAIT_BUS_ARRIVE = "wait_bus_arrive"
+
     END = "end"
 
     # TEST MODE

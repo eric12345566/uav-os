@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     ''' 執行緒創建
     '''
-    afpProcess = mp.Process(target=afp.AutoFlightProcess, args=(frameService, osStateService, terminalService,))
+    afpProcess = mp.Process(target=afp.AutoFlightProcess, args=(frameService, osStateService, terminalService, carSocketService,))
     tpProcess = mp.Process(target=tp.terminalProcess, args=(terminalService,))
     cssProcess = mp.Process(target=cssp.CarSocketServerProcess, args=(carSocketService,))
     if osStateService.getMode() != "test":

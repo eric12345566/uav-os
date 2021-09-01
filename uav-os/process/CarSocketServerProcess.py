@@ -11,9 +11,9 @@ def CarSocketServerProcess( CarSocketService ):
         conn, addr = server.accept()
         clientMessage = str(conn.recv(1024), encoding='utf-8')
         CarSocketService.setPosition( clientMessage )
-        # clientMessage = CarSocketService.getPosition()
+        clientMessage = CarSocketService.getPosition()
         print('Client message is:', clientMessage)
 
-        serverMessage = 'Socket connection is successful'
-        conn.sendall(serverMessage.encode())
+        isLanding = CarSocketService.getLandingStatus()
+        conn.sendall(isLanding.encode())
         conn.close()
