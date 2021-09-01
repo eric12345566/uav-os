@@ -45,7 +45,7 @@ def arucoIdsFindHelper(ids, requiredId):
     return result[0]
 
 
-def TestMultiArucoYawAlign(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, afStateService, frameSharedVar, terminalService):
+def YawAlignMultiArucoController(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, afStateService, frameSharedVar, terminalService):
     alignComplete = False
     while True:
         # Update terminal value

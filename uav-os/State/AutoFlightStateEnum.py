@@ -7,6 +7,8 @@ class AutoFlightState(Enum):
     AUTO_LANDING = "auto_landing"
     FORCE_LANDING = "force_landing"
     LANDED = "landed"
+    YAW_ALIGN = "yaw_align"
+    FINDING_ARUCO = "finding_marker"
     END = "end"
 
     # TEST MODE

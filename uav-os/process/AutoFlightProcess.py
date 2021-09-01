@@ -12,7 +12,9 @@ from controller.AutoLandingSecController import AutoLandingSecController, RvecTe
     AutoLandingNewSecController
 from controller.YawAlignmentController import YawAlignmentController
 from controller.AutoLandingThirdController import AutoLandingThirdController
-from controller.TestController import TestMultiArucoYawAlign
+from controller.YawAlignMultiArucoController import YawAlignMultiArucoController
+from controller.FindArucoController import FindArucoController
+from controller.ArucoPIDLandingController import ArucoPIDLandingController
 
 # State
 from State.OSStateEnum import OSState
@@ -79,7 +81,6 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
                 RotateAngle = angleBtw2Points(markList[0], markList[1])
 
             cv.arrowedLine(frame, markList[0], markList[1], color=(0, 255, 0), thickness=2)
-
 
         # Draw Line from frame center to AruCo center
         # cv.arrowedLine(frame, frame_center, (markCenterX, markCenterY), color=(0, 255, 0), thickness=2)
@@ -192,16 +193,6 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
     """ Main 主程式
     """
     while True:
-        # Process frame
-        # frame = telloFrameBFR.frame
-        # frame = cv.flip(frame, 1)
-        # frameHeight, frameWidth, _ = frame.shape
-
-        # Force Landing Handler
-        # if FlightCmdService.currentState() == FlightState.FORCE_LAND:
-        #     logger.afp_warning("Force Land commit, System Shutdown")
-        #     break
-
         # Update terminal value
         setTerminal(terminalService, tello)
         if terminalService.getForceLanding() == False and afStateService.getState() == AutoFlightState.FORCE_LANDING:
@@ -210,14 +201,25 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
         # Auto Flight State Controller
         if afStateService.getState() == AutoFlightState.READY_TAKEOFF:
             # Take Off
-            # cmdUavRunOnce(FlightCmdService, CmdEnum.takeoff, 0)
             tello.takeoff()
-            # tello.move_up(20)
             # afStateService.autoLanding()
-            afStateService.testMode()
+            # afStateService.testMode()
+            afStateService.finding_aruco()
+        elif afStateService.getState() == AutoFlightState.FINDING_ARUCO:
+            logger.afp_debug("in Finding_aruco")
+            FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                frameSharedVar, terminalService)
+
+        elif afStateService.getState() == AutoFlightState.YAW_ALIGN:
+            logger.afp_debug("in yaw_alignment")
+            YawAlignMultiArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                         frameSharedVar, terminalService)
+            afStateService.autoLanding()
         elif afStateService.getState() == AutoFlightState.AUTO_LANDING:
             # Landing procedure
-            autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger, terminalService)
+            # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger, terminalService)
+            ArucoPIDLandingController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                      frameSharedVar, terminalService)
         elif afStateService.getState() == AutoFlightState.LANDED:
             logger.afp_debug("State: Landed")
             afStateService.end()
@@ -230,57 +232,16 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             # tello.send_rc_control(0, 0, 0, 0)
             # TestSpeedController(tello, telloFrameBFR, cameraCalibArr[0],
             #                     cameraCalibArr[1], afStateService, frameSharedVar)
-            # RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar)
+            # RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar, terminalService)
+
             # TestMultiArucoYawAlign(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
             #                        frameSharedVar, terminalService)
+
             # AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
             #                            frameSharedVar, terminalService)
 
-            tello.send_rc_control(0, 0, 0, 0)
-            print('-------------------Position--------------------')
-            print(str(indoorLocationSharedVar.getLocation()))
-            # print(str(indoorLocationShared.x_location), str(indoorLocationShared.y_location), str(indoorLocationShared.direction))
-            pass
-            RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar,
-                     terminalService)
-            print("State!!!")
-            print(afStateService.getState())
-        elif afStateService.getState() == AutoFlightState.KEYBOARD_CONTROL:
-            while True:
-
-                # Update terminal value
-                setTerminal(terminalService, tello)
-                print("In State")
-                if keyboard.read_key() == "p":
-                    print("You pressed p")
-                    tello.move_up(20)
-                if keyboard.read_key() == "o":
-                    print("You pressed o")
-                    tello.move_down(20)
-                if keyboard.read_key() == "w":
-                    print("You pressed w")
-                    tello.move_forward(20)
-                if keyboard.read_key() == "s":
-                    print("You pressed s")
-                    tello.move_back(20)
-                if keyboard.read_key() == "a":
-                    print("You pressed a")
-                    tello.move_left(20)
-                if keyboard.read_key() == "d":
-                    print("You pressed d")
-                    tello.move_right(20)
-                if keyboard.read_key() == "l":
-                    print("You pressed l")
-                    tello.rotate_clockwise(30)
-                if keyboard.read_key() == "k":
-                    print("You pressed k")
-                    tello.rotate_counter_clockwise(30)
-                if keyboard.read_key() == "c":
-                    print("You pressed c")
-                    terminalService.setKeyboardTrigger(False)
-                    afStateService.testMode()
-                    print("SW to Test")
-                    break
+            FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                frameSharedVar, terminalService)
 
     logger.afp_info("AutoFlightProcess End")
 

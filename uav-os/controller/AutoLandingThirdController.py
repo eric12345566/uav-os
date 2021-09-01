@@ -3,7 +3,7 @@ import cv2 as cv
 import time
 
 # module & algo
-from module.algo.arucoMarkerTrack import arucoTrackPostEstimate
+from module.algo.arucoMarkerTrack import arucoTrackPostEstimate, arucoMarkerSelectPoseEstimate
 from service.LoggerService import LoggerService
 from module.terminalModule import setTerminal
 
@@ -17,11 +17,11 @@ def arucoPoseCoordinate(telloFrameBFR, matrix_coefficients, distortion_coefficie
     frameHeight, frameWidth, _ = frame.shape
 
     # Get Post Estimation from Aruco Marker
-    centerX, centerY, rvec, tvec, ids = arucoTrackPostEstimate(matrix_coefficients, distortion_coefficients, frame)
+    centerX, centerY, rvec, tvec, haveMarker = arucoMarkerSelectPoseEstimate(0, matrix_coefficients, distortion_coefficients, frame)
     frameSharedVar.rvec = rvec
     frameSharedVar.tvec = tvec
 
-    if np.all(ids is not None):
+    if haveMarker:
         # 有看到 aruco marker
         # 輸出整數值的 Error
         xError = int(tvec[0][0][0] * 100)
@@ -47,9 +47,10 @@ def flyALittle(tello, direction):
         tello.send_rc_control(-20, 0, 0, 0)
     elif direction == "r":
         tello.send_rc_control(20, 0, 0, 0)
-    time.sleep(0.6)
+    # 0.6, 3
+    time.sleep(0.4)
     tello.send_rc_control(0, 0, 0, 0)
-    time.sleep(3)
+    time.sleep(1)
 
 
 def AutoLandingThirdController(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, afStateService, frameSharedVar, terminalService):

@@ -23,6 +23,12 @@ class AutoFlightStateService(object):
     def autoLanding(self):
         self.State = AutoFlightState.AUTO_LANDING
 
+    def finding_aruco(self):
+        self.State = AutoFlightState.FINDING_ARUCO
+
+    def yaw_align(self):
+        self.State = AutoFlightState.YAW_ALIGN
+
     # State to LANDED
     def landed(self):
         self.State = AutoFlightState.LANDED
