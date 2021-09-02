@@ -202,10 +202,10 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
         # Auto Flight State Controller
         if afStateService.getState() == AutoFlightState.READY_TAKEOFF:
             # Take Off
-            tello.takeoff()
+            # tello.takeoff()
             # afStateService.autoLanding()
-            # afStateService.testMode()
-            afStateService.finding_aruco()
+            afStateService.testMode()
+            # afStateService.finding_aruco()
         elif afStateService.getState() == AutoFlightState.FINDING_ARUCO:
             logger.afp_debug("in Finding_aruco")
             FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
