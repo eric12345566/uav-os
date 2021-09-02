@@ -97,7 +97,7 @@ def streamDecode(frame):
         # for obj in decodeObjects:
         #     # print("QrCode Position: ", obj.polygon[1].x)
     # cv2.circle(recFrame, (480, 360), 5, (255, 0, 0), -1)  # draw circle points
-    recFrame = cv2.resize(recFrame, None, fx=1.25, fy=1.25, interpolation=cv2.INTER_CUBIC)
+    recFrame = cv2.resize(recFrame, None, fx=1.5, fy=1.5, interpolation=cv2.INTER_CUBIC)
 
     rotateAngle, recFrame = QrcodeEstimate(recFrame)
     # print('---------------------Return RotateAngle---------------------')
