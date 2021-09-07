@@ -202,7 +202,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
         # Auto Flight State Controller
         if afStateService.getState() == AutoFlightState.READY_TAKEOFF:
             # Take Off
-            # tello.takeoff()
+            tello.takeoff()
             # afStateService.autoLanding()
             afStateService.testMode()
             # afStateService.finding_aruco()
