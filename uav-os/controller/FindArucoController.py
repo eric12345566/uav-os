@@ -2,6 +2,7 @@ import numpy as np
 import cv2 as cv
 import time
 from enum import Enum
+from Loggy import Loggy
 
 # module & algo
 from State.AutoFlightStateEnum import AutoFlightState
@@ -14,8 +15,7 @@ from controller.AlignArucoPIDController import AlignArucoPIDController
 # helper
 from helper.AsyncTimer import AsyncTimer
 
-logger = LoggerService()
-
+loggy = Loggy("FindArucoCtr")
 
 class Direction(Enum):
     start = "start"
