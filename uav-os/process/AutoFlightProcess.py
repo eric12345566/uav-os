@@ -215,8 +215,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             # tello.send_rc_control(0, 0, 0, 0)
             # TestSpeedController(tello, telloFrameBFR, cameraCalibArr[0],
             #                     cameraCalibArr[1], afStateService, frameSharedVar)
-            # RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar, terminalService)
-
+            RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar, terminalService)
+            tello.send_rc_control(0, 0, 0, 0)
             # TestMultiArucoYawAlign(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
             #                        frameSharedVar, terminalService)
 
@@ -225,9 +225,9 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
 
             # FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
             #                     frameSharedVar, terminalService)
-            YawAlignMultiArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
-                                         frameSharedVar, terminalService)
-            tello.land()
+            # YawAlignMultiArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+            #                              frameSharedVar, terminalService)
+            # tello.land()
 
     logger.afp_info("AutoFlightProcess End")
 
