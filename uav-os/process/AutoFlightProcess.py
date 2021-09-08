@@ -185,6 +185,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, carSocketSe
     afStateService = AutoFlightStateService()
 
     afStateService.waitBusArrive()
+    onBus = False
     # afStateService.readyTakeOff()
     # TODO: 把TestMode
     # TEST_MODE
@@ -200,9 +201,19 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, carSocketSe
 
         # Auto Flight State Controller
         if afStateService.getState() == AutoFlightState.WAIT_BUS_ARRIVE:
-            while( carSocketService.getPosition() != 'A3'):
-                carSocketService.setLandingStatus( 'false' )
-                pass
+            if not onBus:
+                while( carSocketService.getPosition() != 'A1'):
+                    carSocketService.setLandingStatus( 'false' )
+                    # carSocketService.setLandingStatus('true')
+                    pass
+            elif onBus:
+                while (carSocketService.getPosition() == 'A1' and carSocketService.getBusState() == 'arrive'):
+                    carSocketService.setLandingStatus('true')
+                    pass
+                while( carSocketService.getPosition() != 'A3' or carSocketService.getBusState() != 'arrive'):
+                    carSocketService.setLandingStatus('false')
+                    pass
+                carSocketService.setLandingStatus('true')
             afStateService.readyTakeOff()
 
         elif afStateService.getState() == AutoFlightState.READY_TAKEOFF:
@@ -234,9 +245,13 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, carSocketSe
             AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
                                        frameSharedVar, terminalService)
         elif afStateService.getState() == AutoFlightState.LANDED:
-            carSocketService.setLandingStatus( 'true' )
             logger.afp_debug("State: Landed")
-            afStateService.end()
+            carSocketService.setLandingStatus( 'true' )
+            if not onBus:
+                afStateService.waitBusArrive()
+                onBus = True
+            elif onBus:
+                afStateService.end()
             pass
         elif afStateService.getState() == AutoFlightState.END:
             logger.afp_info("AFP End")

@@ -11,9 +11,13 @@ def CarSocketServerProcess( CarSocketService ):
         conn, addr = server.accept()
         clientMessage = str(conn.recv(1024), encoding='utf-8')
         CarSocketService.setPosition( clientMessage )
-        clientMessage = CarSocketService.getPosition()
-        print('Client message is:', clientMessage)
+        busPosition = CarSocketService.getPosition()
+        busState = CarSocketService.getBusState()
+
+        print('busPosition is:', busPosition)
+        print('busPosition is:', busState)
 
         isLanding = CarSocketService.getLandingStatus()
+        # print( 'isLanding: ', isLanding)
         conn.sendall(isLanding.encode())
         conn.close()
