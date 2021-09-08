@@ -1,6 +1,7 @@
 import numpy as np
 import cv2 as cv
 import time
+from Loggy import Loggy
 
 # module & algo
 from module.algo.arucoMarkerTrack import arucoTrackPostEstimate, arucoMultiTrackPostEstimate
@@ -9,7 +10,7 @@ from service.LoggerService import LoggerService
 from module.terminalModule import setTerminal
 
 logger = LoggerService()
-
+loggy = Loggy("YawAlignMultiArucoCtr")
 
 def arucoMultiPoseCoordinate(telloFrameBFR, matrix_coefficients, distortion_coefficients, frameSharedVar):
     # Process frame
@@ -90,7 +91,8 @@ def YawAlignMultiArucoController(tello, telloFrameBFR, matrix_coefficients, dist
         if alignComplete:
             if alignNumber < 3:
                 alignNumber = alignNumber + 1
-                logger.afp_debug("alignNumber: " + str(alignNumber))
+                # logger.afp_debug("alignNumber: " + str(alignNumber))
+                loggy.debug("alignNumber: ", alignNumber)
                 yawSpeedSet = yawSpeedSet - 10
                 time.sleep(0.5)
                 alignComplete = False

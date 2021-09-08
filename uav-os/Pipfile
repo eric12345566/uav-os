@@ -11,8 +11,8 @@ cli-ui = "*"
 simple-pid = "*"
 pandas = "*"
 matplotlib = "*"
-nba-api = "*"
 tk = "*"
+loggylogger = "*"
 
 [dev-packages]
 
