@@ -204,7 +204,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             # Take Off
             tello.takeoff()
             # afStateService.autoLanding()
-            afStateService.testMode()
+            # afStateService.testMode()
+            afStateService.autoFlight()
             # afStateService.finding_aruco()
         elif afStateService.getState() == AutoFlightState.FINDING_ARUCO:
             logger.afp_debug("in Finding_aruco")

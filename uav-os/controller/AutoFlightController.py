@@ -28,12 +28,12 @@ def positionConfirm(terminalService, tello):
         x = terminalService.getInfo('position_X')
         y = terminalService.getInfo('position_Y')
         rotateAngle = terminalService.getInfo('rotate')
-        positionList.append(np.array([x, y]))
+        positionList.append(([x, y]))
         rotateList.append(round(rotateAngle))
         counter += 1
     print(str(positionList))
     print(str(rotateList))
-    maxPosition = max(positionList.all(), key=positionList.count)
+    maxPosition = max(positionList, key=positionList.count)
     maxRotateAngle = max(rotateList, key=rotateList.count)
     return maxPosition, maxRotateAngle
 
@@ -43,22 +43,28 @@ def autoFlightController(tello, afStateService, logger, terminalService):
     # tello.rotate_clockwise(235)
     source, currentRotateAngle = positionConfirm(terminalService, tello)
     print(source, currentRotateAngle)
+    print('------------------------------------------------------')
     # Destination 需要從自走車那邊共享過來
     destination = np.array([30, 30])
 
     # 計算角度與距離
 
     targetRotateAngle, targetDistance = AngleCalculateForRoute(source, destination)
+    print(targetRotateAngle, targetDistance)
+    print('------------------------------------------------------')
     # TODO: 使用Tello API 前進到Destination -> AUTO_LANDING
 
     neededRotateAngle = targetRotateAngle - currentRotateAngle
     if neededRotateAngle > 0:
-        tello.rotate_clockwise(neededRotateAngle)
+        tello.rotate_counter_clockwise(neededRotateAngle)
     else:
-        tello.rotate_clockwise(neededRotateAngle + 360)
+        tello.rotate_counter_clockwise(neededRotateAngle + 360)
     time.sleep(2)
     tello.move_forward(targetDistance)
-    afStateService.autoLanding()
+    time.sleep(2)
+    afStateService.forceLanding()
+    tello.land()
+    print("Force Landing")
     # while True:
     #     setTerminal(terminalService, tello)
     #     x = terminalService.getInfo('position_X')
@@ -82,7 +88,10 @@ def AngleCalculateForRoute(source, destination):
     :returns angle: 先行旋轉角度 distance： 旋轉後直線前進距離
     """
     print(transferLocationID(str(40)))
-    v1 = destination - source
+
+    print("Destination, source")
+    print(destination, source)
+    v1 = source - destination
     v2 = np.array([0, 1])
 
     print("V1:" + str(v1))
@@ -90,11 +99,12 @@ def AngleCalculateForRoute(source, destination):
 
     cosine_angle = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
     angle = np.arccos(cosine_angle) * 180 / np.pi
-
+    print("ANGLE___")
+    print(angle)
     move_distance = distance(v1)
     print(move_distance)
-    return angle, distance
+    return round(angle), move_distance
 
 
 # TODO: 給予點對點算出角度
-print(AngleCalculateForRoute(np.array([30, 30]), np.array([0, 0])))
+print(AngleCalculateForRoute(np.array([240, 120]), np.array([30, 30])))
