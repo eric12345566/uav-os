@@ -53,10 +53,7 @@ def autoFlightController(tello, afStateService, logger, terminalService):
     print(targetRotateAngle, targetDistance)
     print('------------------------------------------------------')
     rotateController(targetRotateAngle, currentRotateAngle, targetDistance, tello, v1)
-    tello.land()
-    afStateService.autoLanding()
-    # afStateService.yaw_align()
-    print("Auto Landing")
+    afStateService.yaw_align()
 
 
 def rotateController(targetRotateAngle, currentRotateAngle, targetDistance, tello, v1):

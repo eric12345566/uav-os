@@ -220,9 +220,9 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, carSocketSe
         elif afStateService.getState() == AutoFlightState.READY_TAKEOFF:
             # Take Off
             tello.takeoff()
-            time.sleep(5)
-            tello.move_forward(80)
-            time.sleep(2)
+            # time.sleep(5)
+            # tello.move_forward(80)
+            # time.sleep(2)
 
             # afStateService.autoLanding()
             # afStateService.testMode()
