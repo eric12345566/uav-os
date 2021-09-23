@@ -97,7 +97,7 @@ def streamDecode(frame):
         # for obj in decodeObjects:
         #     # print("QrCode Position: ", obj.polygon[1].x)
     # cv2.circle(recFrame, (480, 360), 5, (255, 0, 0), -1)  # draw circle points
-    recFrame = cv2.resize(recFrame, None, fx=1.25, fy=1.25, interpolation=cv2.INTER_CUBIC)
+    recFrame = cv2.resize(recFrame, None, fx=1.5, fy=1.5, interpolation=cv2.INTER_CUBIC)
 
     rotateAngle, recFrame = QrcodeEstimate(recFrame)
     # print('---------------------Return RotateAngle---------------------')
@@ -199,7 +199,8 @@ def QrcodeEstimate(frame):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # 高斯濾波法
-    src_gray = cv2.GaussianBlur(image, (7, 7), 0)
+    # Maybe GaussianBlur value can be 7
+    src_gray = cv2.GaussianBlur(image, (5, 5), 0)
     ret, mask = cv2.threshold(src_gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     copyImage = mask
     element = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))

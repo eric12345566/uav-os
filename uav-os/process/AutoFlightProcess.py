@@ -7,6 +7,7 @@ import keyboard
 import time
 
 # Controller
+from controller.AutoFlightController import autoFlightController
 from controller.AutoLandingController import autoLandingController
 from controller.AutoLandingSecController import AutoLandingSecController, RvecTest, TestSpeedFly, AdjustDistToTarget, \
     AutoLandingNewSecController
@@ -225,8 +226,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, carSocketSe
 
             # afStateService.autoLanding()
             # afStateService.testMode()
-            afStateService.finding_aruco()
-
+            afStateService.autoFlight()
+            # afStateService.finding_aruco()
         elif afStateService.getState() == AutoFlightState.FINDING_ARUCO:
             logger.afp_debug("in Finding_aruco")
             FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
@@ -265,15 +266,64 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, carSocketSe
 
             # TestMultiArucoYawAlign(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
             #                        frameSharedVar, terminalService)
-
             # AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
             #                            frameSharedVar, terminalService)
 
-            # FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
-            #                     frameSharedVar, terminalService)
-            YawAlignMultiArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
-                                         frameSharedVar, terminalService)
-            tello.land()
+            tello.send_rc_control(0, 0, 0, 0)
+            print('-------------------Position--------------------')
+            print(str(indoorLocationSharedVar.getLocation()))
+            # print(str(indoorLocationShared.x_location), str(indoorLocationShared.y_location), str(indoorLocationShared.direction))
+            pass
+            RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar,
+                     terminalService)
+            print("State!!!")
+            print(afStateService.getState())
+        elif afStateService.getState() == AutoFlightState.KEYBOARD_CONTROL:
+            while True:
+
+                # Update terminal value
+                setTerminal(terminalService, tello)
+                print("In State")
+                if keyboard.read_key() == "p":
+                    print("You pressed p")
+                    tello.move_up(20)
+                if keyboard.read_key() == "o":
+                    print("You pressed o")
+                    tello.move_down(20)
+                if keyboard.read_key() == "w":
+                    print("You pressed w")
+                    tello.move_forward(20)
+                if keyboard.read_key() == "s":
+                    print("You pressed s")
+                    tello.move_back(20)
+                if keyboard.read_key() == "a":
+                    print("You pressed a")
+                    tello.move_left(20)
+                if keyboard.read_key() == "d":
+                    print("You pressed d")
+                    tello.move_right(20)
+                if keyboard.read_key() == "l":
+                    print("You pressed l")
+                    tello.rotate_clockwise(30)
+                if keyboard.read_key() == "k":
+                    print("You pressed k")
+                    tello.rotate_counter_clockwise(30)
+                if keyboard.read_key() == "c":
+                    print("You pressed c")
+                    terminalService.setKeyboardTrigger(False)
+                    afStateService.testMode()
+                    print("SW to Test")
+                    break
+                if keyboard.read_key() == "z":
+                    print("You pressed z")
+                    terminalService.setKeyboardTrigger(False)
+                    afStateService.autoFlight()
+                    print("SW to autoFlight")
+                    break
+        elif afStateService.getState() == AutoFlightState.FLYING_MODE:
+            # TODO: Function() -> Use to control the E2E aviation
+            autoFlightController(tello, afStateService, logger, terminalService)
+            pass
 
     logger.afp_info("AutoFlightProcess End")
 
