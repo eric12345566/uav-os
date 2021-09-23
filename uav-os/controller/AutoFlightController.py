@@ -3,7 +3,6 @@ import keyboard
 from module.terminalModule import setTerminal
 import numpy as np
 import math
-
 from worker.indoorLocationWorker import transferLocationID
 
 
@@ -45,26 +44,38 @@ def autoFlightController(tello, afStateService, logger, terminalService):
     print(source, currentRotateAngle)
     print('------------------------------------------------------')
     # Destination 需要從自走車那邊共享過來
-    destination = np.array([30, 30])
-
+    # destination = np.array([412, 124])
+    destination = np.array([0, 0])
+    destination = np.array([270, -120])
     # 計算角度與距離
 
-    targetRotateAngle, targetDistance = AngleCalculateForRoute(source, destination)
+    targetRotateAngle, targetDistance, v1 = AngleCalculateForRoute(source, destination)
     print(targetRotateAngle, targetDistance)
     print('------------------------------------------------------')
-    # TODO: 使用Tello API 前進到Destination -> AUTO_LANDING
+    rotateController(targetRotateAngle, currentRotateAngle, targetDistance, tello, v1)
+    tello.land()
+    afStateService.autoLanding()
+    # afStateService.yaw_align()
+    print("Auto Landing")
 
+
+def rotateController(targetRotateAngle, currentRotateAngle, targetDistance, tello, v1):
     neededRotateAngle = targetRotateAngle - currentRotateAngle
+    print("----------旋轉角度----------")
+    print(str(neededRotateAngle))
     if neededRotateAngle > 0:
-        tello.rotate_counter_clockwise(neededRotateAngle)
+        neededRotateAngle
     else:
-        tello.rotate_counter_clockwise(neededRotateAngle + 360)
+        neededRotateAngle = neededRotateAngle + 360
+    if v1[0] >= 0:
+        tello.rotate_clockwise(neededRotateAngle)
+    else:
+        tello.rotate_counter_clockwise(neededRotateAngle)
+    # 判斷方位
     time.sleep(2)
     tello.move_forward(targetDistance)
     time.sleep(2)
-    afStateService.forceLanding()
-    tello.land()
-    print("Force Landing")
+
     # while True:
     #     setTerminal(terminalService, tello)
     #     x = terminalService.getInfo('position_X')
@@ -78,8 +89,6 @@ def autoFlightController(tello, afStateService, logger, terminalService):
     # time.sleep(0.2)
 
 
-# Angle for route Function
-
 # Parameter
 def AngleCalculateForRoute(source, destination):
     """
@@ -87,11 +96,14 @@ def AngleCalculateForRoute(source, destination):
     :param destination: 想要移動到的位置
     :returns angle: 先行旋轉角度 distance： 旋轉後直線前進距離
     """
+
     print(transferLocationID(str(40)))
 
     print("Destination, source")
     print(destination, source)
-    v1 = source - destination
+    # v1 = source - destination
+    v1 = destination - source
+    # 固定一向量往上的方向
     v2 = np.array([0, 1])
 
     print("V1:" + str(v1))
@@ -99,12 +111,10 @@ def AngleCalculateForRoute(source, destination):
 
     cosine_angle = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
     angle = np.arccos(cosine_angle) * 180 / np.pi
-    print("ANGLE___")
     print(angle)
     move_distance = distance(v1)
     print(move_distance)
-    return round(angle), move_distance
-
+    return round(angle), move_distance, v1
 
 # TODO: 給予點對點算出角度
-print(AngleCalculateForRoute(np.array([240, 120]), np.array([30, 30])))
+# print(AngleCalculateForRoute(np.array([240, 120]), np.array([30, 30])))
