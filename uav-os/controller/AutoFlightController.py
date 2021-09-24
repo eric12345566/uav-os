@@ -37,7 +37,7 @@ def positionConfirm(terminalService, tello):
     return maxPosition, maxRotateAngle
 
 
-def autoFlightController(tello, afStateService, logger, terminalService):
+def autoFlightController(tello, afStateService, logger, terminalService, destination):
     print("Get in Auto Flight")
     # tello.rotate_clockwise(235)
     source, currentRotateAngle = positionConfirm(terminalService, tello)
@@ -45,8 +45,7 @@ def autoFlightController(tello, afStateService, logger, terminalService):
     print('------------------------------------------------------')
     # Destination 需要從自走車那邊共享過來
     # destination = np.array([412, 124])
-    destination = np.array([0, 0])
-    destination = np.array([270, -120])
+
     # 計算角度與距離
 
     targetRotateAngle, targetDistance, v1 = AngleCalculateForRoute(source, destination)
@@ -94,7 +93,6 @@ def AngleCalculateForRoute(source, destination):
     :returns angle: 先行旋轉角度 distance： 旋轉後直線前進距離
     """
 
-    print(transferLocationID(str(40)))
 
     print("Destination, source")
     print(destination, source)

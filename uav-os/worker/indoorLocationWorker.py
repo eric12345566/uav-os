@@ -27,8 +27,8 @@ def transferLocationID(x):
 # Transfer location ID to (x, y) value
 def transferLocationID2(x):
     return {
-        '-1': (-1, -1), '8': (0, 0), '6': (0, 76), '4': (121, 0), '5': (152, 22),
-        '3': (412, 124), '2': (445, 144), '1': (540, 260)
+        '-1': (-1, -1), '8': (0, 0), '6': (0, -76), '4': (121, 0), '5': (152, -22),
+        '3': (412, -124), '2': (445, -144), '1': (540, -260)
     }[x]
 
 
@@ -48,7 +48,7 @@ def indoorLocationWorker(telloFrameBFR, indoorLocationShared, terminalService, t
             # print('-------------------------------------------------')
 
             # tello.send_rc_control(0, 0, 0, 0)
-            indoorLocationShared.x_location, indoorLocationShared.y_location = transferLocationID(str(qrPosition))
+            indoorLocationShared.x_location, indoorLocationShared.y_location = transferLocationID2(str(qrPosition))
             indoorLocationShared.direction = rotateAngle
             terminalService.setInfo('rotate', rotateAngle)
             terminalService.setInfo('position_X', indoorLocationShared.x_location)

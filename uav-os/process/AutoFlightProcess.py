@@ -41,6 +41,7 @@ from module.algo.arucoMarkerDetect import arucoMarkerDetectFrame
 from module.terminalModule import setTerminal
 from module.indoorLocationAlgo.QrcodePositionAlgo import streamDecode
 from module.algo.angleBtw2Points import angleBtw2Points
+import numpy as np
 
 logger = LoggerService()
 
@@ -195,24 +196,33 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, carSocketSe
     """ Main 主程式
     """
     while True:
+        # Destination
+        FLIGHT_TARGET = ''
+
         # Update terminal value
         setTerminal(terminalService, tello)
         if terminalService.getForceLanding() == False and afStateService.getState() == AutoFlightState.FORCE_LANDING:
             afStateService.readyTakeOff()
 
         # Auto Flight State Controller
+        # 目前是A0駛往A1會起飛
+        # LandingStatus 告訴公車目前狀態 True:可做動作 ; False:不可做動作
         if afStateService.getState() == AutoFlightState.WAIT_BUS_ARRIVE:
-            if not onBus:
-                while( carSocketService.getPosition() != 'A1'):
-                    carSocketService.setLandingStatus( 'false' )
-                    # carSocketService.setLandingStatus('true')
-                    pass
-            elif onBus:
-                while (carSocketService.getPosition() == 'A1' and carSocketService.getBusState() == 'arrive'):
-                    carSocketService.setLandingStatus('true')
-                    pass
-                while( carSocketService.getPosition() != 'A3' or carSocketService.getBusState() != 'arrive'):
+            if not onBus:  # 在基地等指令 車子往A1走時
+                while carSocketService.getPosition() != 'A1':
                     carSocketService.setLandingStatus('false')
+                    # carSocketService.setLandingStatus('true')
+                    FLIGHT_TARGET = 'A1'
+                    pass
+            elif onBus:  # 在車子上等指令 等待車子靠站
+                while carSocketService.getPosition() == 'A1' \
+                        and carSocketService.getBusState() == 'arrive':
+                    carSocketService.setLandingStatus('true')  # 判斷無人機是否ready
+                    pass
+                while carSocketService.getPosition() != 'A3' \
+                        or carSocketService.getBusState() != 'arrive':
+                    carSocketService.setLandingStatus('false')
+                    FLIGHT_TARGET = 'A3'
                     pass
                 carSocketService.setLandingStatus('true')
             afStateService.readyTakeOff()
@@ -247,7 +257,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, carSocketSe
                                        frameSharedVar, terminalService)
         elif afStateService.getState() == AutoFlightState.LANDED:
             logger.afp_debug("State: Landed")
-            carSocketService.setLandingStatus( 'true' )
+            carSocketService.setLandingStatus('true')
             if not onBus:
                 afStateService.waitBusArrive()
                 onBus = True
@@ -322,7 +332,11 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, carSocketSe
                     break
         elif afStateService.getState() == AutoFlightState.FLYING_MODE:
             # TODO: Function() -> Use to control the E2E aviation
-            autoFlightController(tello, afStateService, logger, terminalService)
+            if FLIGHT_TARGET == 'A1':
+                destination = np.array([445, -144])
+            elif FLIGHT_TARGET == 'A3':
+                destination = np.array([0, -76])
+            autoFlightController(tello, afStateService, logger, terminalService, destination)
             pass
 
     logger.afp_info("AutoFlightProcess End")
