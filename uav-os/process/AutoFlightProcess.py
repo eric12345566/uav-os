@@ -332,10 +332,11 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, carSocketSe
                     break
         elif afStateService.getState() == AutoFlightState.FLYING_MODE:
             # TODO: Function() -> Use to control the E2E aviation
-            if FLIGHT_TARGET == 'A1':
-                destination = np.array([445, -144])
-            elif FLIGHT_TARGET == 'A3':
+            destination = ''
+            if onBus:
                 destination = np.array([0, -76])
+            else:
+                destination = np.array([412, -124])
             autoFlightController(tello, afStateService, logger, terminalService, destination)
             pass
 
