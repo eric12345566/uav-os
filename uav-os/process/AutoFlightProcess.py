@@ -195,12 +195,15 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, carSocketSe
 
     """ Main 主程式
     """
+    afStateService.forceLanding()
     while True:
         # Destination
         FLIGHT_TARGET = ''
 
         # Update terminal value
         setTerminal(terminalService, tello)
+        a = terminalService.getForceLanding()
+        b = afStateService.getState()
         if terminalService.getForceLanding() == False and afStateService.getState() == AutoFlightState.FORCE_LANDING:
             afStateService.readyTakeOff()
 
