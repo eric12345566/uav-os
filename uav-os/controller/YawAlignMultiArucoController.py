@@ -49,7 +49,7 @@ def arucoIdsFindHelper(ids, requiredId):
 def YawAlignMultiArucoController(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, afStateService, frameSharedVar, terminalService):
     alignComplete = False
     alignNumber = 1
-    yawSpeedSet = 30
+    yawSpeedSet = 50
     while True:
         # Update terminal value
         setTerminal(terminalService, tello)
@@ -93,8 +93,11 @@ def YawAlignMultiArucoController(tello, telloFrameBFR, matrix_coefficients, dist
                 alignNumber = alignNumber + 1
                 # logger.afp_debug("alignNumber: " + str(alignNumber))
                 loggy.debug("alignNumber: ", alignNumber)
-                yawSpeedSet = yawSpeedSet - 10
-                time.sleep(0.5)
+                if alignNumber == 2:
+                    yawSpeedSet = 20
+                elif alignNumber == 3:
+                    yawSpeedSet = 10
+                time.sleep(0.3)
                 alignComplete = False
                 continue
             else:

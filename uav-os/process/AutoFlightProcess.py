@@ -189,8 +189,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             # Take Off
             tello.takeoff()
             # afStateService.autoLanding()
-            # afStateService.testMode()
-            afStateService.finding_aruco()
+            afStateService.testMode()
+            # afStateService.finding_aruco()
         elif afStateService.getState() == AutoFlightState.FINDING_ARUCO:
             loggy.debug("State: Finding_aruco")
             FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
@@ -215,13 +215,14 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
         elif afStateService.getState() == AutoFlightState.END:
             pass
         elif afStateService.getState() == AutoFlightState.TEST_MODE:
+            loggy.info("State: Test_Mode")
             # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger)
             # tello.send_rc_control(0, 0, 0, 0)
             # TestSpeedController(tello, telloFrameBFR, cameraCalibArr[0],
             #                     cameraCalibArr[1], afStateService, frameSharedVar)
-            RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar,
-                     terminalService)
-            tello.send_rc_control(0, 0, 0, 0)
+            # RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar,
+            #          terminalService)
+            # tello.send_rc_control(0, 0, 0, 0)
             # TestMultiArucoYawAlign(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
             #                        frameSharedVar, terminalService)
 
@@ -230,9 +231,9 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
 
             # FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
             #                     frameSharedVar, terminalService)
-            # YawAlignMultiArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
-            #                              frameSharedVar, terminalService)
-            # tello.land()
+            YawAlignMultiArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                         frameSharedVar, terminalService)
+            tello.land()
 
     # logger.afp_info("AutoFlightProcess End")
     loggy.debug("AutoFlightProcess End")
