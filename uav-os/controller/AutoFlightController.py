@@ -19,21 +19,24 @@ def positionConfirm(terminalService, tello):
     """
     :returns maxLabel:出現最多次的Position, maxRotateAngle:出現最多次的RotateAngle
     """
-    counter = 0
-    positionList = []
-    rotateList = []
-    while counter != 10:
-        setTerminal(terminalService, tello)
-        x = terminalService.getInfo('position_X')
-        y = terminalService.getInfo('position_Y')
-        rotateAngle = terminalService.getInfo('rotate')
-        positionList.append(([x, y]))
-        rotateList.append(round(rotateAngle))
-        counter += 1
-    print(str(positionList))
-    print(str(rotateList))
-    maxPosition = max(positionList, key=positionList.count)
-    maxRotateAngle = max(rotateList, key=rotateList.count)
+    while True:
+        counter = 0
+        positionList = []
+        rotateList = []
+        while counter != 100:
+            setTerminal(terminalService, tello)
+            x = terminalService.getInfo('position_X')
+            y = terminalService.getInfo('position_Y')
+            rotateAngle = terminalService.getInfo('rotate')
+            positionList.append(([x, y]))
+            rotateList.append(round(rotateAngle))
+            counter += 1
+        print(str(positionList))
+        print(str(rotateList))
+        maxPosition = max(positionList, key=positionList.count)
+        maxRotateAngle = max(rotateList, key=rotateList.count)
+        if maxPosition[0] != -1:
+            break
     return maxPosition, maxRotateAngle
 
 
@@ -52,7 +55,7 @@ def autoFlightController(tello, afStateService, logger, terminalService, destina
     print(targetRotateAngle, targetDistance)
     print('------------------------------------------------------')
     rotateController(targetRotateAngle, currentRotateAngle, targetDistance, tello, v1)
-    afStateService.yaw_align()
+    afStateService.finding_aruco()
 
 
 def rotateController(targetRotateAngle, currentRotateAngle, targetDistance, tello, v1):
@@ -92,7 +95,6 @@ def AngleCalculateForRoute(source, destination):
     :param destination: 想要移動到的位置
     :returns angle: 先行旋轉角度 distance： 旋轉後直線前進距離
     """
-
 
     print("Destination, source")
     print(destination, source)

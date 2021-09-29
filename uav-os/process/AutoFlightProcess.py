@@ -195,10 +195,9 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, carSocketSe
 
     """ Main 主程式
     """
+    # Destination
+    FLIGHT_TARGET = ''
     while True:
-        # Destination
-        FLIGHT_TARGET = ''
-
         # Update terminal value
         setTerminal(terminalService, tello)
         if terminalService.getForceLanding() == False and afStateService.getState() == AutoFlightState.FORCE_LANDING:
@@ -333,10 +332,12 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, carSocketSe
         elif afStateService.getState() == AutoFlightState.FLYING_MODE:
             # TODO: Function() -> Use to control the E2E aviation
             if FLIGHT_TARGET == 'A1':
+                print("A1 goal")
                 destination = np.array([445, -144])
+                autoFlightController(tello, afStateService, logger, terminalService, destination)
             elif FLIGHT_TARGET == 'A3':
                 destination = np.array([0, -76])
-            autoFlightController(tello, afStateService, logger, terminalService, destination)
+                autoFlightController(tello, afStateService, logger, terminalService, destination)
             pass
 
     logger.afp_info("AutoFlightProcess End")
