@@ -129,7 +129,7 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
 """
 
 
-def AutoFlightProcess(FrameService, OSStateService, terminalService, carSocketService):
+def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketService):
     # <Deprecated: 拋棄 Controller Process> Wait for Controller Ready, and get the frame
     # while not OSStateService.getControllerInitState():
     #     pass
@@ -193,6 +193,10 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, carSocketSe
     # TEST_MODE
     # afStateService.testMode()
 
+    # Init busInfos (已知目的點)
+    busInfos = uavSocketService.getBusInfosByLoc('A1')
+    busId = ''
+
     """ Main 主程式
     """
     # Destination
@@ -208,22 +212,24 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, carSocketSe
         # LandingStatus 告訴公車目前狀態 True:可做動作 ; False:不可做動作
         if afStateService.getState() == AutoFlightState.WAIT_BUS_ARRIVE:
             if not onBus:  # 在基地等指令 車子往A1走時
-                while carSocketService.getPosition() != 'A1':
-                    carSocketService.setLandingStatus('false')
-                    # carSocketService.setLandingStatus('true')
+                while busInfos is None:
+                    busInfos = uavSocketService.getBusInfosByLoc('A1')
+                    time.sleep(0.01)
                     FLIGHT_TARGET = 'A1'
                     pass
+                busId = busInfos['busId']
+                uavSocketService.emitUavInfos(True, busId)
             elif onBus:  # 在車子上等指令 等待車子靠站
-                while carSocketService.getPosition() == 'A1' \
-                        and carSocketService.getBusState() == 'arrive':
-                    carSocketService.setLandingStatus('true')  # 判斷無人機是否ready
-                    pass
-                while carSocketService.getPosition() != 'A3' \
-                        or carSocketService.getBusState() != 'arrive':
-                    carSocketService.setLandingStatus('false')
+                busInfos = uavSocketService.getBusInfosById(busId)
+                if busInfos is not None:
+                    uavSocketService.emitUavInfos(False, busId)
+                while busInfos is None or busInfos['loc'] != 'A3':
+                    print(busInfos)
+                    busInfos = uavSocketService.getBusInfosById( busId )
+                    time.sleep(0.01)
                     FLIGHT_TARGET = 'A3'
                     pass
-                carSocketService.setLandingStatus('true')
+                # uavSocketService.emitUavInfos(True, busInfos['busId'])
             afStateService.readyTakeOff()
 
         elif afStateService.getState() == AutoFlightState.READY_TAKEOFF:
@@ -256,7 +262,6 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, carSocketSe
                                        frameSharedVar, terminalService)
         elif afStateService.getState() == AutoFlightState.LANDED:
             logger.afp_debug("State: Landed")
-            carSocketService.setLandingStatus('true')
             if not onBus:
                 afStateService.waitBusArrive()
                 onBus = True
