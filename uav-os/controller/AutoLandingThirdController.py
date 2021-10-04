@@ -6,8 +6,10 @@ import time
 from module.algo.arucoMarkerTrack import arucoTrackPostEstimate, arucoMarkerSelectPoseEstimate
 from service.LoggerService import LoggerService
 from module.terminalModule import setTerminal
+from Loggy import Loggy
 
 logger = LoggerService()
+loggy = Loggy("AutoLanding3rdCtr")
 
 
 def arucoPoseCoordinate(telloFrameBFR, matrix_coefficients, distortion_coefficients, frameSharedVar):
@@ -64,8 +66,17 @@ def AutoLandingThirdController(tello, telloFrameBFR, matrix_coefficients, distor
 
         if isSeeMarker and abs(xError) <= 200.0 and abs(yError) <= 200.0:
             # 如果有看到標點，而且 tvec 數值沒有爆炸
-            xErrorLimit = 3
-            yErrorLimit = 3
+
+            # 隨高度調整與 Aruco Marker 降落距離的值
+            now_height = tello.get_distance_tof()
+
+            if now_height >= 90:
+                xErrorLimit = 5
+                yErrorLimit = 5
+            else:
+                xErrorLimit = 3
+                yErrorLimit = 3
+
             if abs(xError) >= xErrorLimit or abs(yError) >= yErrorLimit:
                 # 如果標點大於可降落範圍，則進行修正到位置
                 # 先調整前後
@@ -104,10 +115,11 @@ def AutoLandingThirdController(tello, telloFrameBFR, matrix_coefficients, distor
             else:
                 # 已經到降落狀態，執行降落
                 tello.send_rc_control(0, 0, 0, 0)
-                time.sleep(2)
+                time.sleep(1.5)
 
                 now_height = tello.get_distance_tof()
-                logger.afp_debug("now_height: " + str(now_height))
+                # logger.afp_debug("now_height: " + str(now_height))
+                loggy.debug("now_height: ", now_height)
 
                 if 20 <= now_height <= 30:
                     # 如果高度已經在 20 ~ 30 cm 之間，直接下降
@@ -117,7 +129,8 @@ def AutoLandingThirdController(tello, telloFrameBFR, matrix_coefficients, distor
                 else:
                     if now_height // 2 > 30:
                         move_down_cm = int(now_height - now_height // 2)
-                        logger.afp_debug("move_down_cm: " + str(move_down_cm))
+                        # logger.afp_debug("move_down_cm: " + str(move_down_cm))
+                        loggy.debug("move_down_cm: ", move_down_cm)
                         tello.move_down(move_down_cm)
                     else:
                         move_down_cm = int(now_height - 30)
@@ -126,11 +139,13 @@ def AutoLandingThirdController(tello, telloFrameBFR, matrix_coefficients, distor
                             afStateService.landed()
                             break
                         else:
-                            logger.afp_debug("move_down_cm: " + str(move_down_cm))
+                            # logger.afp_debug("move_down_cm: " + str(move_down_cm))
+                            loggy.debug("move_down_cm: ", move_down_cm)
                             tello.move_down(move_down_cm)
         else:
             # 如果沒看到標點，或者數值爆炸
-            logger.afp_info("沒看到標點或數值爆炸")
+            # logger.afp_info("沒看到標點或數值爆炸")
+            loggy.debug("沒看到標點或數值爆炸")
             tello.send_rc_control(0, 0, 0, 0)
             time.sleep(3)
 
