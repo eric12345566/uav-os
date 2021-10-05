@@ -12,8 +12,10 @@ from service.LoggerService import LoggerService
 
 # module
 from module.terminalModule import setTerminal
+from Loggy import Loggy
 
-logger = LoggerService()
+# logger = LoggerService()
+loggy = Loggy("AlightArucoPIDCtr")
 
 
 def AlignArucoPIDController(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, afStateService, frameSharedVar, terminalService):
@@ -105,7 +107,35 @@ def AlignArucoPIDController(tello, telloFrameBFR, matrix_coefficients, distortio
             # 檢查 frame 中心點有沒有在 ArUco Marker 方框內
             rect = np.array(corners)
             rect = rect.reshape([4, 1, 2]).astype(np.int64)
-            isFrameCenterInMarker = cv.pointPolygonTest(rect, (centerX, centerY), False)
+            # loggy.debug("rect: ", rect)
+
+            # 將四個座標往外擴，讓對齊不用那麼準確。
+            scaleUpValue = 30
+            scaleUpDirArray = [(False, False), (True, False), (True, True), (False, True)]
+
+            rectNew = np.copy(rect)
+
+            for i in range(0, 4):
+                firstDir, secondDir = scaleUpDirArray[i]
+                # print(rectNew[i][0])
+                if firstDir:
+                    rectNew[i][0][0] += scaleUpValue
+                else:
+                    rectNew[i][0][0] -= scaleUpValue
+
+                if secondDir:
+                    rectNew[i][0][1] += scaleUpValue
+                else:
+                    rectNew[i][0][1] -= scaleUpValue
+
+                # 確認不會是負值
+                if rectNew[i][0][0] < 0:
+                    rectNew[i][0][0] = 0
+
+                if rectNew[i][0][1] < 0:
+                    rectNew[i][0][1] = 0
+
+            isFrameCenterInMarker = cv.pointPolygonTest(rectNew, (centerX, centerY), False)
 
             # 偵測是否可以下降
             # if abs(fbError) < 20 and abs(lrError) < 20:
@@ -123,16 +153,16 @@ def AlignArucoPIDController(tello, telloFrameBFR, matrix_coefficients, distortio
                 # 如果在中心點框內且尚未計時過，則開始計時
                 landingStartTime = time.time()
                 LandAlreadyRecord = True
-                logger.afp_debug("Landing Timer Start")
+                loggy.debug("Landing Timer Start")
             elif isFrameCenterInMarker == -1 and LandAlreadyRecord:
                 # 如果已經在計時但離開了框框，則取消計時
                 landingStartTime = 0
                 LandAlreadyRecord = False
-                logger.afp_debug("Landing Timer Stop")
+                loggy.debug("Landing Timer Stop")
 
             # 如果中心點在方框內達到一定時間，則下降（時間以秒計算）
             if LandAlreadyRecord and time.time() - landingStartTime >= 1:
-                logger.afp_debug("Time up, Can Landing!")
+                loggy.debug("Time up, Can Landing!")
                 LandAlreadyRecord = False
                 landingStartTime = 0
 

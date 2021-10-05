@@ -5,6 +5,7 @@ from djitellopy import Tello
 from threading import Thread
 import keyboard
 import time
+from Loggy import Loggy
 
 # Controller
 from controller.AutoFlightController import autoFlightController
@@ -44,6 +45,7 @@ from module.algo.angleBtw2Points import angleBtw2Points
 import numpy as np
 
 logger = LoggerService()
+loggy = Loggy("AFP")
 
 
 def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameSharedVar):
@@ -142,8 +144,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
     setTerminal(terminalService, tello)
 
     # Tello Info
-    logger.ctrp_info("battery: " + str(tello.get_battery()))
-    logger.ctrp_info("temperature: " + str(tello.get_temperature()))
+    loggy.info("Battery: ", tello.get_battery())
+    loggy.info("temperature: ", tello.get_temperature())
 
     # stream
     tello.streamoff()
@@ -159,7 +161,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
 
     # 載入相機校正的參數 (路徑請從UAVCore.py開始算，因為這是從那建立的Process)
     cameraCalibArr = load_coefficients("./module/algo/calibration.yml")
-    logger.afp_debug("cameraCalibArr is Load: " + str(cameraCalibArr))
+    # logger.afp_debug("cameraCalibArr is Load: " + str(cameraCalibArr))
+    loggy.debug("cameraCalibArr is Load: ", cameraCalibArr)
 
     # 開啟一個 thread，讓他負責傳送frame給FrameProcess顯示
     frameSendWorker = Thread(target=backgroundSendFrame, args=(FrameService, telloFrameBFR, cameraCalibArr,
@@ -169,7 +172,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
     # ------------------ AutoFlightProcess is ready, init code End --------------------
 
     OSStateService.autoFlightInitReady()
-    logger.afp_debug("AutoFlightProcess Start")
+    # logger.afp_debug("AutoFlightProcess Start")
+    loggy.info("AutoFlightProcess Start")
 
     # Wait for OS ready
     while OSStateService.getCurrentState() == OSState.INITIALIZING:
@@ -248,12 +252,12 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
             afStateService.autoFlight()
             # afStateService.finding_aruco()
         elif afStateService.getState() == AutoFlightState.FINDING_ARUCO:
-            logger.afp_debug("in Finding_aruco")
+            loggy.debug("State: Finding_aruco")
             FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
                                 frameSharedVar, terminalService)
 
         elif afStateService.getState() == AutoFlightState.YAW_ALIGN:
-            logger.afp_debug("in yaw_alignment")
+            loggy.debug("State: yaw_alignment")
             YawAlignMultiArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
                                          frameSharedVar, terminalService)
             afStateService.autoLanding()
@@ -276,12 +280,14 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
             logger.afp_info("AFP End")
             break
         elif afStateService.getState() == AutoFlightState.TEST_MODE:
+            loggy.info("State: Test_Mode")
             # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger)
             # tello.send_rc_control(0, 0, 0, 0)
             # TestSpeedController(tello, telloFrameBFR, cameraCalibArr[0],
             #                     cameraCalibArr[1], afStateService, frameSharedVar)
-            # RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar, terminalService)
-
+            # RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar,
+            #          terminalService)
+            # tello.send_rc_control(0, 0, 0, 0)
             # TestMultiArucoYawAlign(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
             #                        frameSharedVar, terminalService)
             # AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
@@ -349,6 +355,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
             pass
 
     logger.afp_info("AutoFlightProcess End")
+    # logger.afp_info("AutoFlightProcess End")
+    loggy.debug("AutoFlightProcess End")
 
     # Stop indoorLocationWorker
     indoorLocationWorker.join()

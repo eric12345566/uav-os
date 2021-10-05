@@ -2,6 +2,7 @@ import numpy as np
 import cv2 as cv
 import time
 from enum import Enum
+from Loggy import Loggy
 
 # module & algo
 from State.AutoFlightStateEnum import AutoFlightState
@@ -14,8 +15,7 @@ from controller.AlignArucoPIDController import AlignArucoPIDController
 # helper
 from helper.AsyncTimer import AsyncTimer
 
-logger = LoggerService()
-
+loggy = Loggy("FindArucoCtr")
 
 class Direction(Enum):
     start = "start"
@@ -84,7 +84,7 @@ def FindArucoController(tello, telloFrameBFR, matrix_coefficients, distortion_co
                     tello.send_rc_control(-20, 0, 0, 0)
                 elif searchDirection == Direction.forward:
                     timer.setTimer(sleepTime)
-                    tello.send_rc_control(0, 20, 0, 0)
+                    tello.send_rc_control(0, 30, 0, 0)
                 elif searchDirection == Direction.backward:
                     timer.setTimer(sleepTime)
                     tello.send_rc_control(0, -20, 0, 0)
