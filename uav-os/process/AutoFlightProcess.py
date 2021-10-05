@@ -223,13 +223,17 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
                 busInfos = uavSocketService.getBusInfosById(busId)
                 if busInfos is not None:
                     uavSocketService.emitUavInfos(False, busId)
-                while busInfos is None or busInfos['loc'] != 'A3':
-                    print(busInfos)
+                while busInfos is None or busInfos['loc'] != 'A3' or busInfos['status'] != 'going to':
+                    busInfos = uavSocketService.getBusInfosById(busId)
+                    time.sleep(0.01)
+                    pass
+                uavSocketService.emitUavInfos(True, busInfos['busId'])
+                while busInfos is None or busInfos['loc'] != 'A3' or busInfos['status'] != 'arrive':
                     busInfos = uavSocketService.getBusInfosById( busId )
                     time.sleep(0.01)
                     FLIGHT_TARGET = 'A3'
                     pass
-                # uavSocketService.emitUavInfos(True, busInfos['busId'])
+                uavSocketService.emitUavInfos(False, busInfos['busId'])
             afStateService.readyTakeOff()
 
         elif afStateService.getState() == AutoFlightState.READY_TAKEOFF:
