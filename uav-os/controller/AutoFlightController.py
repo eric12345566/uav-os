@@ -67,10 +67,13 @@ def rotateController(targetRotateAngle, currentRotateAngle, targetDistance, tell
     else:
         neededRotateAngle = neededRotateAngle + 360
     time.sleep(0.5)
-    if v1[0] >= 0:
-        tello.rotate_clockwise(neededRotateAngle)
-    else:
-        tello.rotate_counter_clockwise(neededRotateAngle)
+    try:
+        if v1[0] >= 0:
+            tello.rotate_clockwise(neededRotateAngle)
+        else:
+            tello.rotate_counter_clockwise(neededRotateAngle)
+    except:
+        rotateController(targetRotateAngle, currentRotateAngle, targetDistance, tello, v1)
     # 判斷方位
     time.sleep(2)
     tello.move_forward(targetDistance)
