@@ -161,7 +161,7 @@ def AlignArucoPIDController(tello, telloFrameBFR, matrix_coefficients, distortio
                 loggy.debug("Landing Timer Stop")
 
             # 如果中心點在方框內達到一定時間，則下降（時間以秒計算）
-            if LandAlreadyRecord and time.time() - landingStartTime >= 1:
+            if LandAlreadyRecord and time.time() - landingStartTime >= 0.5:
                 loggy.debug("Time up, Can Landing!")
                 LandAlreadyRecord = False
                 landingStartTime = 0
