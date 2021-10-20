@@ -118,7 +118,7 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
         cv.putText(frame, f"ids: {ids}", (20, 110),
                    cv.FONT_HERSHEY_SIMPLEX, 1,
                    (0, 255, 0), 2, cv.LINE_AA)
-        cv.putText(frame, f"RAngel: {RotateAngle}", (20, 150),
+        cv.putText(frame, f"RAngle: {RotateAngle}", (20, 150),
                    cv.FONT_HERSHEY_SIMPLEX, 1,
                    (0, 255, 0), 2, cv.LINE_AA)
 
