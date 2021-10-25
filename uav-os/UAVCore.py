@@ -7,7 +7,6 @@ import process.ControllerProcess as ctrp
 import process.FrameProcess as fp
 import process.AutoFlightProcess as afp
 import process.terminalProcess as tp
-# import process.CarSocketServerProcess as cssp
 import process.MarkedFrameProcess as mfp
 
 # Class
@@ -50,7 +49,6 @@ if __name__ == '__main__':
     '''
     afpProcess = mp.Process(target=afp.AutoFlightProcess, args=(frameService, osStateService, terminalService, uavSocketService,))
     tpProcess = mp.Process(target=tp.terminalProcess, args=(terminalService,))
-    # cssProcess = mp.Process(target=cssp.CarSocketServerProcess, args=(uavSocketService,))
     if osStateService.getMode() != "test":
         frameProcess = mp.Process(target=fp.FrameProcess, args=(frameService, osStateService,))
     else:
@@ -71,7 +69,6 @@ if __name__ == '__main__':
     '''
     tpProcess.start()
     afpProcess.start()
-    # cssProcess.start()
     frameProcess.start()
     # ctrProcess.start()
 
@@ -79,7 +76,6 @@ if __name__ == '__main__':
     '''
     tpProcess.join()
     afpProcess.join()
-    # cssProcess.join()
     frameProcess.join()
     # ctrProcess.join()
 
