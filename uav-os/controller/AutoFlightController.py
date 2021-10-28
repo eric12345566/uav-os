@@ -44,7 +44,7 @@ def autoFlightController(tello, afStateService, logger, terminalService):
     print(source, currentRotateAngle)
     print('------------------------------------------------------')
     # Destination 需要從自走車那邊共享過來
-    destination = np.array([445, -144])
+    destination = np.array([150, -90])
 
     # 計算角度與距離
 

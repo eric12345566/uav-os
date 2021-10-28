@@ -17,10 +17,11 @@ logger = LoggerService()
 
 
 def AlignArucoPIDController(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, afStateService, frameSharedVar, terminalService):
-    lrPID = PID(0.3, 0.0001, 0.1)
+    lrPID = PID(0.3, 0.0001, 0.1) #P會爆衝
     lrPID.output_limits = (-100, 100)
     fbPID = PID(0.3, 0.0001, 0.1)
     fbPID.output_limits = (-100, 100)
+    # PID 參數
     up_down_velocity = 0
     yaw_velocity = 0
     canLanding = False
@@ -53,7 +54,7 @@ def AlignArucoPIDController(tello, telloFrameBFR, matrix_coefficients, distortio
         # logger.afp_debug("now_height: " + str(now_height))
         frameSharedVar.landHeight = now_height
 
-        # ArUco Marker Detect
+        # ArUco Marker Detect  Corners->重點
         corners, haveMarker = arucoMarkerSelectDetect(frame, 0)
 
         if terminalService.getForceLanding():
@@ -72,10 +73,10 @@ def AlignArucoPIDController(tello, telloFrameBFR, matrix_coefficients, distortio
             # logger.afp_debug("x_c: " + str(x_centerPixel) + ",y_c: " + str(y_centerPixel))
 
             # 讓飛機對準降落點
-            # left-right
+            # left-right 畫面反轉要試一下
             lrError = x_centerPixel - frameWidth // 2
             left_right_velocity = lrPID(lrError)
-            left_right_velocity = int(left_right_velocity) // 3
+            left_right_velocity = int(left_right_velocity) // 3 #出來的值會太大 可以除更多
 
             # front-back
             fbError = y_centerPixel - frameHeight // 2
@@ -105,6 +106,7 @@ def AlignArucoPIDController(tello, telloFrameBFR, matrix_coefficients, distortio
             # 檢查 frame 中心點有沒有在 ArUco Marker 方框內
             rect = np.array(corners)
             rect = rect.reshape([4, 1, 2]).astype(np.int64)
+            # 確定有無在方匡
             isFrameCenterInMarker = cv.pointPolygonTest(rect, (centerX, centerY), False)
 
             # 偵測是否可以下降
