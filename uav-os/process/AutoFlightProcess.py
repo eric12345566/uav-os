@@ -347,6 +347,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
         elif afStateService.getState() == AutoFlightState.FLYING_MODE:
             # TODO: Function() -> Use to control the E2E aviation
             destination = ''
+            # 修改目標位置
             if onBus:
                 destination = np.array([0, -76])
             else:
