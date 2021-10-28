@@ -349,9 +349,9 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
             destination = ''
             # 修改目標位置
             if onBus:
-                destination = np.array([0, -76])
+                destination = np.array([540, -240])
             else:
-                destination = np.array([412, -124])
+                destination = np.array([120, -120])
             autoFlightController(tello, afStateService, logger, terminalService, destination)
             pass
 
