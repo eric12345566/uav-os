@@ -6,7 +6,6 @@ name = "pypi"
 [packages]
 numpy = "*"
 djitellopy2 = "*"
-opencv-contrib-python = "*"
 cli-ui = "*"
 simple-pid = "*"
 pandas = "*"
@@ -15,11 +14,12 @@ nba-api = "*"
 pillow = "*"
 tk = "*"
 pyzbar = "*"
-opencv-python = "*"
 tello = "*"
 keyboard = "*"
 loggylogger = "*"
-loggy = "*"
+opencv-python = "*"
+opencv-contrib-python = "*"
+python-socketio = "*"
 
 [dev-packages]
 

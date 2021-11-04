@@ -25,6 +25,7 @@ from State.AutoFlightStateEnum import AutoFlightState
 # Service
 from service.LoggerService import LoggerService
 from service.AutoFlightStateService import AutoFlightStateService
+from service.UAVSocketService import reset_flightRoute
 
 # Module
 from module.BackgroundFrameRead import BackgroundFrameRead
@@ -205,6 +206,18 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
     """
     # Destination
     FLIGHT_TARGET = ''
+    print('1')
+    # route = None
+    routes = uavSocketService.calculateRoute({'x': 2, 'y': 93})
+    print('get route')
+    loggy.info(str(routes))
+    reset_flightRoute()
+    # while routes is None:
+    #     print('Pending Route...')
+    #     routes = getFlight_route()
+    #     pass
+    # print('Final routes: ' + routes)
+
     while True:
         # Update terminal value
         setTerminal(terminalService, tello)
