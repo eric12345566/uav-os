@@ -76,8 +76,9 @@ def rotateController(targetRotateAngle, currentRotateAngle, targetDistance, tell
         rotateController(targetRotateAngle, currentRotateAngle, targetDistance, tello, v1)
     # 判斷方位
     time.sleep(2)
-    tello.move_forward(targetDistance)
+    tello.move_forward(int(targetDistance/2))
     time.sleep(2)
+    tello.move_forward(int(targetDistance / 2))
 
     # while True:
     #     setTerminal(terminalService, tello)
