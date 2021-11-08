@@ -20,6 +20,7 @@ tello = "*"
 keyboard = "*"
 loggylogger = "*"
 loggy = "*"
+matplotlib = "*"
 
 [dev-packages]
 
