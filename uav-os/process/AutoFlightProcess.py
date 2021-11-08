@@ -191,9 +191,9 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
     """
     afStateService = AutoFlightStateService()
 
-    afStateService.waitBusArrive()
+    # afStateService.waitBusArrive()
     onBus = False
-    # afStateService.readyTakeOff()
+    afStateService.readyTakeOff()
     # TODO: 把TestMode
     # TEST_MODE
     # afStateService.testMode()
@@ -262,6 +262,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
 
             # afStateService.autoLanding()
             # afStateService.testMode()
+            print('我要飛了')
             afStateService.autoFlight()
             # afStateService.finding_aruco()
         elif afStateService.getState() == AutoFlightState.FINDING_ARUCO:
@@ -358,14 +359,18 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
                     print("SW to autoFlight")
                     break
         elif afStateService.getState() == AutoFlightState.FLYING_MODE:
+            print('Auto進來囉！')
             # TODO: Function() -> Use to control the E2E aviation
             destination = ''
             # 修改目標位置
-            if onBus:
-                destination = np.array([540, -240])
-            else:
-                destination = np.array([120, -120])
+            destination = np.array([540, -240])
+            # if onBus:
+            #     destination = np.array([540, -240])
+            # else:
+            #     destination = np.array([120, -120])
             autoFlightController(tello, afStateService, logger, terminalService, destination)
+            tello.land()
+            afStateService.end()
             pass
 
     logger.afp_info("AutoFlightProcess End")
