@@ -1,5 +1,6 @@
 import tkinter
 import time
+import matplotlib.pyplot as plt
 
 class Begueradj():
     '''
@@ -156,6 +157,10 @@ class Begueradj():
         self.lbl_avg_temp.config(text='Average temperature: ' + str(self.average_temperature))
         self.lbl_battery_percentage.config(text='Battery percentage: ' + str(self.tello_battery_percentage) + '%')
 
+        # plt.plot(time.strftime("%H:%M:%S"), self.terminalService.getInfo('temperature'))
+        self.terminalService.setTemper()
+        self.terminalService.setBattery()
+        # plt.show()
         self.window.after(5, self.getTime)  # 每隔5ms调用函数 gettime 自身获取时间
 
     def define_layout(self, obj, cols=1, rows=1):

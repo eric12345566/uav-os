@@ -6,6 +6,7 @@ from threading import Thread
 import keyboard
 import time
 from Loggy import Loggy
+import matplotlib.pyplot as plt
 
 # Controller
 from controller.AutoFlightController import autoFlightController
@@ -230,6 +231,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
         if afStateService.getState() == AutoFlightState.WAIT_BUS_ARRIVE:
             if not onBus:  # 在基地等指令 車子往A1走時
                 while busInfos is None:
+                    setTerminal(terminalService, tello)
                     busInfos = uavSocketService.getBusInfosByLoc('A1')
                     time.sleep(0.01)
                     FLIGHT_TARGET = 'A1'
@@ -241,11 +243,13 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
                 if busInfos is not None:
                     uavSocketService.emitUavInfos(False, busId)
                 while busInfos is None or busInfos['loc'] != 'A3' or busInfos['status'] != 'going to':
+                    setTerminal(terminalService, tello)
                     busInfos = uavSocketService.getBusInfosById(busId)
                     time.sleep(0.01)
                     pass
                 uavSocketService.emitUavInfos(True, busInfos['busId'])
                 while busInfos is None or busInfos['loc'] != 'A3' or busInfos['status'] != 'arrive':
+                    setTerminal(terminalService, tello)
                     busInfos = uavSocketService.getBusInfosById( busId )
                     time.sleep(0.01)
                     FLIGHT_TARGET = 'A3'
@@ -283,16 +287,28 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
             AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
                                        frameSharedVar, terminalService)
         elif afStateService.getState() == AutoFlightState.LANDED:
-            logger.afp_debug("State: Landed")
-            if not onBus:
-                afStateService.waitBusArrive()
-                onBus = True
-            elif onBus:
-                afStateService.end()
+            afStateService.end()
+            # logger.afp_debug("State: Landed")
+            # if not onBus:
+            #     afStateService.waitBusArrive()
+            #     onBus = True
+            # elif onBus:
+            #     afStateService.end()
             pass
         elif afStateService.getState() == AutoFlightState.END:
+            # print(terminalService.getTemper())
+            temperObj = terminalService.getBattery()
             logger.afp_info("AFP End")
-            break
+            while True:
+                if keyboard.read_key() == "l":
+                    print("You pressed l")
+                    afStateService.readyTakeOff()
+                    break
+                if keyboard.read_key() == "k":
+                    plt.plot(temperObj['time'], temperObj['battery'])
+                    plt.show()
+                    quit()
+
         elif afStateService.getState() == AutoFlightState.TEST_MODE:
             loggy.info("State: Test_Mode")
             # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger)
@@ -369,8 +385,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
             # else:
             #     destination = np.array([120, -120])
             autoFlightController(tello, afStateService, logger, terminalService, destination)
-            tello.land()
-            afStateService.end()
+            afStateService.finding_aruco()
             pass
 
     logger.afp_info("AutoFlightProcess End")
