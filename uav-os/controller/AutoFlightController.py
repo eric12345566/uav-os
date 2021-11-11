@@ -59,7 +59,7 @@ def autoFlightController(tello, afStateService, logger, terminalService, destina
 
 
 def rotateController(targetRotateAngle, currentRotateAngle, targetDistance, tello, v1):
-    neededRotateAngle = targetRotateAngle - currentRotateAngle
+    neededRotateAngle = targetRotateAngle - (360 - currentRotateAngle)
     print("----------旋轉角度----------")
     print(str(neededRotateAngle))
     if neededRotateAngle > 0:

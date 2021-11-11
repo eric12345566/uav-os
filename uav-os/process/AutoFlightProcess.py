@@ -282,8 +282,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
             pass
         elif afStateService.getState() == AutoFlightState.END:
             # print(terminalService.getTemper())
-            temperObj = terminalService.getBattery()
-            plt.plot( temperObj['time'], temperObj['battery'])
+            temperObj = terminalService.getTemper()
+            plt.plot( temperObj['time'], temperObj['temperature'])
             plt.show()
             logger.afp_info("AFP End")
             break

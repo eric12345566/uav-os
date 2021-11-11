@@ -1,5 +1,4 @@
 import time
-import datetime
 class terminalService(object):
 
     # TODO:串接資料
@@ -27,18 +26,18 @@ class terminalService(object):
         self.battery_times = []
         self.temperatures = []
         self.battery = []
-        self.startTime = datetime.datetime.now()
+        self.startTime = time.time()
     """
         Utility function
     """
 
     def setBattery(self):
-        nowTime = datetime.datetime.now()
+        nowTime = time.time()
         self.battery.append(self.tello_battery)
         self.battery_times.append(nowTime - self.startTime)
 
     def setTemper(self):
-        nowTime = datetime.datetime.now()
+        nowTime = time.time()
         self.temperatures.append(self.average_temperature)
         self.temper_times.append(nowTime - self.startTime)
 
