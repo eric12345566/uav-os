@@ -19,7 +19,7 @@ class UAVSocketService(object):
         self.sio = sio
 
     def runSocket(self):
-        self.sio.connect('http://192.168.50.89:4000')
+        self.sio.connect('http://127.0.0.1:4000')
         if( self.sio.sid is not None ):
             sio.emit('uavConnect', 'Uav-123')
 
@@ -33,6 +33,12 @@ class UAVSocketService(object):
     def getBusInfosById(self, busId):
         self.sio.emit('drivingBusInfosById', busId)
         return busInfosObj
+
+    def initRoute(self, start_point):
+        pass
+
+    def resetRoute(self, start_point, dest_point):
+        pass
 
     def disconnect(self):
         self.sio.disconnect()

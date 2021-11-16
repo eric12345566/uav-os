@@ -11,6 +11,7 @@ class AutoFlightState(Enum):
     FINDING_ARUCO = "finding_marker"
     WAIT_BUS_ARRIVE = "wait_bus_arrive"
     WAIT_COMMAND = "wait_commmand"
+    WAIT_ROUTE = "wait_route"
 
     END = "end"
 
