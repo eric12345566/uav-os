@@ -10,6 +10,7 @@ class AutoFlightState(Enum):
     YAW_ALIGN = "yaw_align"
     FINDING_ARUCO = "finding_marker"
     WAIT_BUS_ARRIVE = "wait_bus_arrive"
+    WAIT_COMMAND = "wait_commmand"
 
     END = "end"
 

@@ -55,3 +55,7 @@ class AutoFlightStateService(object):
     # AutoFlight
     def autoFlight(self):
         self.State = AutoFlightState.FLYING_MODE
+
+    # Wait ATC command
+    def waitCommand(self):
+        self.State = AutoFlightState.WAIT_COMMAND
