@@ -15,6 +15,7 @@ from classes.FrameClass import FrameClass
 # Service
 from service.terminalService import terminalService
 from service.OSStateService import OSStateService
+from service.UAVSocketService import UAVSocketService
 from service.FlightCmdService import FlightCmdService
 
 if __name__ == '__main__':
@@ -26,6 +27,7 @@ if __name__ == '__main__':
     BaseManager.register('terminalService', terminalService)
     BaseManager.register('frameClass', FrameClass)
     BaseManager.register('osStateService', OSStateService)
+    BaseManager.register( 'uavSocketService', UAVSocketService)
     # BaseManager.register('flightCmdService', FlightCmdService)
     manager = BaseManager()
     manager.start()
@@ -35,6 +37,7 @@ if __name__ == '__main__':
     terminalService = manager.terminalService()
     frameService = manager.frameClass()
     osStateService = manager.osStateService()
+    uavSocketService = manager.uavSocketService()
     # flightCmdService = manager.flightCmdService()
 
     '''OS環境變數：test 狀態下不會啟動 Tello 與 openCV
@@ -44,7 +47,7 @@ if __name__ == '__main__':
 
     ''' 執行緒創建
     '''
-    afpProcess = mp.Process(target=afp.AutoFlightProcess, args=(frameService, osStateService, terminalService,))
+    afpProcess = mp.Process(target=afp.AutoFlightProcess, args=(frameService, osStateService, terminalService, uavSocketService,))
     tpProcess = mp.Process(target=tp.terminalProcess, args=(terminalService,))
     if osStateService.getMode() != "test":
         frameProcess = mp.Process(target=fp.FrameProcess, args=(frameService, osStateService,))
@@ -58,6 +61,10 @@ if __name__ == '__main__':
     #     # print("test")
     #     ctrProcess = mp.Process(target=ctrp.controllerProcessDummy, args=(frameService, osStateService,
     #                                                                       flightCmdService,))
+    ''' Start Socket
+    '''
+    uavSocketService.runSocket()
+
     ''' 開始執行緒
     '''
     tpProcess.start()

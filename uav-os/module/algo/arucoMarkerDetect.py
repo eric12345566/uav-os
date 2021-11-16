@@ -12,6 +12,27 @@ def arucoMarkerDetect(frame):
     return _corners, _ids, rejectedImgPoints
 
 
+def arucoMarkerSelectDetect(frame, selectID):
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    aruco_dict = aruco.Dictionary_get(aruco.DICT_5X5_1000)
+    arucoParameters = aruco.DetectorParameters_create()
+    corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=arucoParameters)
+
+    resultCorners = [[]]
+    haveMarker = False
+
+    if np.all(ids is not None):
+        for i in range(0, len(ids)):
+            if ids[i] == [selectID]:
+                haveMarker = True
+                resultCorners[0] = corners[i]
+    else:
+        resultCorners = [[]]
+        haveMarker = False
+
+    return resultCorners, haveMarker
+
+
 def arucoMarkerDetectFrame(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     aruco_dict = aruco.Dictionary_get(aruco.DICT_5X5_1000)

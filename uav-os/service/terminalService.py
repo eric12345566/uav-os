@@ -1,3 +1,4 @@
+import time
 class terminalService(object):
 
     # TODO:串接資料
@@ -20,9 +21,31 @@ class terminalService(object):
         self.position_y = 0
         self.tello_high = 0
 
+        # Plot settings
+        self.temper_times = []
+        self.battery_times = []
+        self.temperatures = []
+        self.battery = []
+        self.startTime = time.time()
     """
         Utility function
     """
+
+    def setBattery(self):
+        nowTime = time.time()
+        self.battery.append(self.tello_battery)
+        self.battery_times.append(nowTime - self.startTime)
+
+    def setTemper(self):
+        nowTime = time.time()
+        self.temperatures.append(self.average_temperature)
+        self.temper_times.append(nowTime - self.startTime)
+
+    def getBattery(self):
+        return { 'battery': self.battery, 'time': self.battery_times }
+
+    def getTemper(self):
+        return { 'temperature': self.temperatures, 'time': self.temper_times }
 
     def setInfo(self, key, value):
         if key == 'pitch':

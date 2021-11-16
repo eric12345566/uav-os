@@ -5,14 +5,19 @@ from djitellopy import Tello
 from threading import Thread
 import keyboard
 import time
+from Loggy import Loggy
+import matplotlib.pyplot as plt
 
 # Controller
+from controller.AutoFlightController import autoFlightController
 from controller.AutoLandingController import autoLandingController
 from controller.AutoLandingSecController import AutoLandingSecController, RvecTest, TestSpeedFly, AdjustDistToTarget, \
     AutoLandingNewSecController
 from controller.YawAlignmentController import YawAlignmentController
 from controller.AutoLandingThirdController import AutoLandingThirdController
-from controller.TestController import TestMultiArucoYawAlign
+from controller.YawAlignMultiArucoController import YawAlignMultiArucoController
+from controller.FindArucoController import FindArucoController
+from controller.ArucoPIDLandingController import ArucoPIDLandingController
 
 # State
 from State.OSStateEnum import OSState
@@ -38,8 +43,10 @@ from module.algo.arucoMarkerDetect import arucoMarkerDetectFrame
 from module.terminalModule import setTerminal
 from module.indoorLocationAlgo.QrcodePositionAlgo import streamDecode
 from module.algo.angleBtw2Points import angleBtw2Points
+import numpy as np
 
 logger = LoggerService()
+loggy = Loggy("AFP")
 
 
 def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameSharedVar):
@@ -79,7 +86,6 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
                 RotateAngle = angleBtw2Points(markList[0], markList[1])
 
             cv.arrowedLine(frame, markList[0], markList[1], color=(0, 255, 0), thickness=2)
-
 
         # Draw Line from frame center to AruCo center
         # cv.arrowedLine(frame, frame_center, (markCenterX, markCenterY), color=(0, 255, 0), thickness=2)
@@ -126,7 +132,7 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
 """
 
 
-def AutoFlightProcess(FrameService, OSStateService, terminalService):
+def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketService):
     # <Deprecated: 拋棄 Controller Process> Wait for Controller Ready, and get the frame
     # while not OSStateService.getControllerInitState():
     #     pass
@@ -139,8 +145,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
     setTerminal(terminalService, tello)
 
     # Tello Info
-    logger.ctrp_info("battery: " + str(tello.get_battery()))
-    logger.ctrp_info("temperature: " + str(tello.get_temperature()))
+    loggy.info("Battery: ", tello.get_battery())
+    loggy.info("temperature: ", tello.get_temperature())
 
     # stream
     tello.streamoff()
@@ -156,7 +162,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
 
     # 載入相機校正的參數 (路徑請從UAVCore.py開始算，因為這是從那建立的Process)
     cameraCalibArr = load_coefficients("./module/algo/calibration.yml")
-    logger.afp_debug("cameraCalibArr is Load: " + str(cameraCalibArr))
+    # logger.afp_debug("cameraCalibArr is Load: " + str(cameraCalibArr))
+    loggy.debug("cameraCalibArr is Load: ", cameraCalibArr)
 
     # 開啟一個 thread，讓他負責傳送frame給FrameProcess顯示
     frameSendWorker = Thread(target=backgroundSendFrame, args=(FrameService, telloFrameBFR, cameraCalibArr,
@@ -166,7 +173,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
     # ------------------ AutoFlightProcess is ready, init code End --------------------
 
     OSStateService.autoFlightInitReady()
-    logger.afp_debug("AutoFlightProcess Start")
+    # logger.afp_debug("AutoFlightProcess Start")
+    loggy.info("AutoFlightProcess Start")
 
     # Wait for OS ready
     while OSStateService.getCurrentState() == OSState.INITIALIZING:
@@ -183,58 +191,114 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
     """
     afStateService = AutoFlightStateService()
 
-    afStateService.readyTakeOff()
-
+    afStateService.waitBusArrive()
+    onBus = False
+    # afStateService.readyTakeOff()
     # TODO: 把TestMode
     # TEST_MODE
     # afStateService.testMode()
 
+    # Init busInfos (已知目的點)
+    busInfos = uavSocketService.getBusInfosByLoc('A1')
+    busId = ''
+
     """ Main 主程式
     """
+    # Destination
+    FLIGHT_TARGET = ''
     while True:
-        # Process frame
-        # frame = telloFrameBFR.frame
-        # frame = cv.flip(frame, 1)
-        # frameHeight, frameWidth, _ = frame.shape
-
-        # Force Landing Handler
-        # if FlightCmdService.currentState() == FlightState.FORCE_LAND:
-        #     logger.afp_warning("Force Land commit, System Shutdown")
-        #     break
-
         # Update terminal value
         setTerminal(terminalService, tello)
         if terminalService.getForceLanding() == False and afStateService.getState() == AutoFlightState.FORCE_LANDING:
             afStateService.readyTakeOff()
 
         # Auto Flight State Controller
-        if afStateService.getState() == AutoFlightState.READY_TAKEOFF:
+        # 目前是A0駛往A1會起飛
+        # LandingStatus 告訴公車目前狀態 True:可做動作 ; False:不可做動作
+        if afStateService.getState() == AutoFlightState.WAIT_BUS_ARRIVE:
+            if not onBus:  # 在基地等指令 車子往A1走時
+                while busInfos is None:
+                    setTerminal(terminalService, tello)
+                    busInfos = uavSocketService.getBusInfosByLoc('A1')
+                    time.sleep(0.01)
+                    FLIGHT_TARGET = 'A1'
+                    pass
+                busId = busInfos['busId']
+                uavSocketService.emitUavInfos(True, busId)
+            elif onBus:  # 在車子上等指令 等待車子靠站
+                busInfos = uavSocketService.getBusInfosById(busId)
+                if busInfos is not None:
+                    uavSocketService.emitUavInfos(False, busId)
+                while busInfos is None or busInfos['loc'] != 'A3' or busInfos['status'] != 'going to':
+                    setTerminal(terminalService, tello)
+                    busInfos = uavSocketService.getBusInfosById(busId)
+                    time.sleep(0.01)
+                    pass
+                uavSocketService.emitUavInfos(True, busInfos['busId'])
+                while busInfos is None or busInfos['loc'] != 'A3' or busInfos['status'] != 'arrive':
+                    setTerminal(terminalService, tello)
+                    busInfos = uavSocketService.getBusInfosById( busId )
+                    time.sleep(0.01)
+                    FLIGHT_TARGET = 'A3'
+                    pass
+                uavSocketService.emitUavInfos(False, busInfos['busId'])
+            afStateService.readyTakeOff()
+
+        elif afStateService.getState() == AutoFlightState.READY_TAKEOFF:
             # Take Off
-            # cmdUavRunOnce(FlightCmdService, CmdEnum.takeoff, 0)
             tello.takeoff()
-            # tello.move_up(20)
+            # time.sleep(5)
+            # tello.move_forward(80)
+            # time.sleep(2)
+
             # afStateService.autoLanding()
-            afStateService.testMode()
+            # afStateService.testMode()
+            afStateService.autoFlight()
+            # afStateService.finding_aruco()
+        elif afStateService.getState() == AutoFlightState.FINDING_ARUCO:
+            loggy.debug("State: Finding_aruco")
+            FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                frameSharedVar, terminalService)
+
+        elif afStateService.getState() == AutoFlightState.YAW_ALIGN:
+            loggy.debug("State: yaw_alignment")
+            YawAlignMultiArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                         frameSharedVar, terminalService)
+            afStateService.autoLanding()
         elif afStateService.getState() == AutoFlightState.AUTO_LANDING:
             # Landing procedure
-            autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger, terminalService)
+            # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger, terminalService)
+            # ArucoPIDLandingController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+            #                           frameSharedVar, terminalService)
+            AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                       frameSharedVar, terminalService)
         elif afStateService.getState() == AutoFlightState.LANDED:
             logger.afp_debug("State: Landed")
-            afStateService.end()
+            if not onBus:
+                afStateService.waitBusArrive()
+                onBus = True
+            elif onBus:
+                afStateService.end()
             pass
         elif afStateService.getState() == AutoFlightState.END:
+            # temperObj = terminalService.getTemper()
+            # plt.plot( temperObj['time'], temperObj['temperature'])
+            # plt.show()
             logger.afp_info("AFP End")
             break
         elif afStateService.getState() == AutoFlightState.TEST_MODE:
+            loggy.info("State: Test_Mode")
             # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger)
             # tello.send_rc_control(0, 0, 0, 0)
             # TestSpeedController(tello, telloFrameBFR, cameraCalibArr[0],
             #                     cameraCalibArr[1], afStateService, frameSharedVar)
-            # RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar)
+            # RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar,
+            #          terminalService)
+            # tello.send_rc_control(0, 0, 0, 0)
             # TestMultiArucoYawAlign(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
             #                        frameSharedVar, terminalService)
-            AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
-                                       frameSharedVar, terminalService)
+            # AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+            #                            frameSharedVar, terminalService)
 
             tello.send_rc_control(0, 0, 0, 0)
             print('-------------------Position--------------------')
@@ -281,8 +345,26 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
                     afStateService.testMode()
                     print("SW to Test")
                     break
+                if keyboard.read_key() == "z":
+                    print("You pressed z")
+                    terminalService.setKeyboardTrigger(False)
+                    afStateService.autoFlight()
+                    print("SW to autoFlight")
+                    break
+        elif afStateService.getState() == AutoFlightState.FLYING_MODE:
+            # TODO: Function() -> Use to control the E2E aviation
+            destination = ''
+            # 修改目標位置
+            if onBus:
+                destination = np.array([540, -240])
+            else:
+                destination = np.array([120, -120])
+            autoFlightController(tello, afStateService, logger, terminalService, destination)
+            pass
 
     logger.afp_info("AutoFlightProcess End")
+    # logger.afp_info("AutoFlightProcess End")
+    loggy.debug("AutoFlightProcess End")
 
     # Stop indoorLocationWorker
     indoorLocationWorker.join()

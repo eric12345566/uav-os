@@ -18,6 +18,9 @@ pyzbar = "*"
 opencv-python = "*"
 tello = "*"
 keyboard = "*"
+loggylogger = "*"
+loggy = "*"
+matplotlib = "*"
 
 [dev-packages]
 
