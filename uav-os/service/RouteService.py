@@ -16,10 +16,9 @@ class RouteService( object ):
             4. Set callback 來決定 state 對應的 controller 
         '''
         self.commandFromATC = None
-        self.taskList = []
+        self.atcList = []
         self.routes = None
 
-        self.controller = None
         self.threading = None
 
     def initRoute(self, start_point):
@@ -32,7 +31,7 @@ class RouteService( object ):
         if self.afStateService.getState() == AutoFlightState.WAIT_COMMAND:
             # Todo
             '''
-                等待從 ATC 拿到 test list 再動作
+                等待從 ATC 拿到 task list 再動作
             '''
             self.afStateService.waitRoute()
             pass
@@ -65,8 +64,8 @@ class RouteService( object ):
             # Todo
             '''
                 1. 決定 end 的條件 ( 電量、返家 )
-                2. 回到 wait command state
-                3. 回到 wait route state
+                2. 回到 wait command state ( 根據 task type 決定 )
+                3. 回到 wait route state ( 當 task type 是 "toAndFro" 時 )
                 4. 回到 wait bus arrive state ( route 還沒結束 ) --> 利用 "某參數" 判斷
             '''
             pass
