@@ -26,6 +26,7 @@ from State.AutoFlightStateEnum import AutoFlightState
 # Service
 from service.LoggerService import LoggerService
 from service.AutoFlightStateService import AutoFlightStateService
+from service.RouteService import RouteService
 
 # Module
 from module.BackgroundFrameRead import BackgroundFrameRead
@@ -190,6 +191,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
     """ State
     """
     afStateService = AutoFlightStateService()
+    routeService = RouteService( afStateService, uavSocketService )
 
     afStateService.waitBusArrive()
     onBus = False
@@ -229,12 +231,14 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
                 busInfos = uavSocketService.getBusInfosById(busId)
                 if busInfos is not None:
                     uavSocketService.emitUavInfos(False, busId)
+                # 在下車前一站告知要下車
                 while busInfos is None or busInfos['loc'] != 'A3' or busInfos['status'] != 'going to':
                     setTerminal(terminalService, tello)
                     busInfos = uavSocketService.getBusInfosById(busId)
                     time.sleep(0.01)
                     pass
                 uavSocketService.emitUavInfos(True, busInfos['busId'])
+                # 等待到站
                 while busInfos is None or busInfos['loc'] != 'A3' or busInfos['status'] != 'arrive':
                     setTerminal(terminalService, tello)
                     busInfos = uavSocketService.getBusInfosById( busId )
@@ -247,14 +251,19 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
         elif afStateService.getState() == AutoFlightState.READY_TAKEOFF:
             # Take Off
             tello.takeoff()
-            # time.sleep(5)
-            # tello.move_forward(80)
-            # time.sleep(2)
-
-            # afStateService.autoLanding()
-            # afStateService.testMode()
             afStateService.autoFlight()
-            # afStateService.finding_aruco()
+
+        elif afStateService.getState() == AutoFlightState.FLYING_MODE:
+            # TODO: Function() -> Use to control the E2E aviation
+            destination = ''
+            # 修改目標位置
+            if onBus:
+                destination = np.array([540, -240])
+            else:
+                destination = np.array([120, -120])
+            autoFlightController(tello, afStateService, logger, terminalService, destination)
+            pass
+
         elif afStateService.getState() == AutoFlightState.FINDING_ARUCO:
             loggy.debug("State: Finding_aruco")
             FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
@@ -351,16 +360,6 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
                     afStateService.autoFlight()
                     print("SW to autoFlight")
                     break
-        elif afStateService.getState() == AutoFlightState.FLYING_MODE:
-            # TODO: Function() -> Use to control the E2E aviation
-            destination = ''
-            # 修改目標位置
-            if onBus:
-                destination = np.array([540, -240])
-            else:
-                destination = np.array([120, -120])
-            autoFlightController(tello, afStateService, logger, terminalService, destination)
-            pass
 
     logger.afp_info("AutoFlightProcess End")
     # logger.afp_info("AutoFlightProcess End")

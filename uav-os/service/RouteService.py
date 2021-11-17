@@ -18,12 +18,16 @@ class RouteService( object ):
         self.commandFromATC = None
         self.atcList = []
         self.routes = None
+        self.routeList = []
+        self.getOnBus = False
 
         self.threading = None
 
+    # Todo: 在啟動 UAVOS 時、task type = oneWay 時調用
     def initRoute(self, start_point):
         pass
 
+    # Todo: 從暫停暫停狀態回復時、task type = toAndFro 時調用
     def resetRoute(self, start_point, dest_point):
         pass
 
@@ -37,9 +41,9 @@ class RouteService( object ):
             pass
 
         elif self.afStateService.getState() == AutoFlightState.WAIT_ROUTE:
-            if( self.route['onBus'] == True ):
+            if( self.routes['onBus'] == True ):
                 self.afStateService.waitBusArrive()
-            elif( self.route['onBus'] == False ):
+            elif( self.routes['onBus'] == False ):
                 self.afStateService.readyTakeOff()
 
         elif self.afStateService.getState() == AutoFlightState.WAIT_BUS_ARRIVE:
@@ -49,7 +53,12 @@ class RouteService( object ):
             self.afStateService.autoflight()
 
         elif self.afStateService.getState() == AutoFlightState.FLYING_MODE:
-            self.afStateService.finding_aruco()
+            # Todo: 若是 routes array.length != 0, 會繼續進到 flying mode
+            if len( self.routeList ) > 0:
+                self.destination = self.routeList.pop(0)
+                self.afStateService.autoflight()
+            else:
+                self.afStateService.finding_aruco()
 
         elif self.afStateService.getState() == AutoFlightState.FINDING_ARUCO:
             self.afStateService.yaw_align()
