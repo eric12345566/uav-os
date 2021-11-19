@@ -199,9 +199,9 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
     # afStateService.testMode()
 
     # Init busInfos (已知目的點)
-    routeService.resetRoute(2, 10)
-    onBusStation = None
-    offBusStation = None
+    startPoint = routeService.getStartPoint()
+    destPoint = routeService.getDestPoint()
+    routeService.resetRoute( startPoint, destPoint )
     busId = ''
 
     """ Main 主程式

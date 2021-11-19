@@ -26,10 +26,14 @@ class RouteService( object ):
         self.routes = None
         self.routeList = []
         self.getOnBus = False
+
         self.targetPoint = None
-        self.targetPoint = None
+
         self.onBusStation = None
         self.offBusStation = None
+        self.startPoint = 2
+        self.destPoint = 136
+
 
         self.threading = None
 
@@ -54,7 +58,7 @@ class RouteService( object ):
         elif self.afStateService.getState() == AutoFlightState.WAIT_ROUTE:
             # Init Route
             while self.routes == None:
-                self.routes = self.resetRoute(2, 10)
+                self.routes = self.resetRoute( self.startPoint, self.destPoint )
             # Update route list
             if self.routes['onBus'] == True:
                 self.onBusStation = self.routes['getOnStation']
@@ -126,6 +130,12 @@ class RouteService( object ):
 
     def getTargetPoint(self):
         return self.targetPoint
+
+    def getStartPoint(self):
+        return self.startPoint
+
+    def getDestPoint(self):
+        return self.destPoint
 
     def setAtcCommand(self, atc_command):
         self.atc_command = atc_command
