@@ -199,7 +199,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
     # afStateService.testMode()
 
     # Init busInfos (已知目的點)
-    routeService.resetRoute(2, 6)
+    routeService.resetRoute(2, 10)
     busInfos = uavSocketService.getBusInfosByLoc('A1')
     busId = ''
 

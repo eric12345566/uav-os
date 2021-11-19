@@ -44,8 +44,10 @@ class RouteService( object ):
             pass
 
         elif self.afStateService.getState() == AutoFlightState.WAIT_ROUTE:
+            # Init Route
             while self.routes == None:
-                self.routes = self.resetRoute(2, 6)
+                self.routes = self.resetRoute(2, 10)
+            # Update route list
             if self.routes['onBus'] == True:
                 if self.getOnBus == False:
                     self.routeList = self.routes['getOnRoutes']
@@ -55,13 +57,14 @@ class RouteService( object ):
             elif self.routes['onBus'] == False:
                 self.routeList = self.routes['routes']
                 self.afStateService.readyTakeOff()
+            # Init destination
+            if len(self.routeList) > 0:
+                self.destination = self.routeList.pop(0)
 
         elif self.afStateService.getState() == AutoFlightState.WAIT_BUS_ARRIVE:
             self.afStateService.readyTakeOff()
 
         elif self.afStateService.getState() == AutoFlightState.READY_TAKEOFF:
-            if len(self.routeList) > 0:
-                self.destination = self.routeList.pop(0)
             self.afStateService.autoFlight()
 
         elif self.afStateService.getState() == AutoFlightState.FLYING_MODE:
@@ -73,6 +76,7 @@ class RouteService( object ):
                 self.afStateService.finding_aruco()
 
         elif self.afStateService.getState() == AutoFlightState.FINDING_ARUCO:
+            # 此 State 被定義在 Controller 當判斷
             # self.afStateService.yaw_align()
             pass
 
@@ -94,6 +98,7 @@ class RouteService( object ):
                 self.afStateService.waitRoute()
                 self.getOnBus = True
             elif self.getOnBus and self.routes['onBus'] == True:
+                self.getOnBus = False
                 self.afStateService.end()
             elif self.routes['onBus'] == False:
                 self.afStateService.end()
