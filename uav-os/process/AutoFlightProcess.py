@@ -199,16 +199,13 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
     # afStateService.testMode()
 
     # Init busInfos (已知目的點)
-    routeService.resetRoute(2, 126)
+    routeService.resetRoute(2, 10)
     onBusStation = None
     offBusStation = None
-    # busInfos = uavSocketService.getBusInfosByLoc('A1')
     busId = ''
 
     """ Main 主程式
     """
-    # Destination
-    FLIGHT_TARGET = ''
     while True:
         # Update terminal value
         setTerminal(terminalService, tello)
@@ -221,12 +218,14 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
         # 目前是A0駛往A1會起飛
         # LandingStatus 告訴公車目前狀態 True:可做動作 ; False:不可做動作
         elif afStateService.getState() == AutoFlightState.WAIT_BUS_ARRIVE:
+            onBusStation = routeService.getOnStation()
+            offBusStation = routeService.getOffStation()
+            busInfos = uavSocketService.getBusInfosByLoc( onBusStation )
             if not routeService.getOnBus:  # 在基地等指令 車子往A1走時
                 while busInfos is None:
                     setTerminal(terminalService, tello)
-                    busInfos = uavSocketService.getBusInfosByLoc('A1')
+                    busInfos = uavSocketService.getBusInfosByLoc( onBusStation )
                     time.sleep(0.01)
-                    FLIGHT_TARGET = 'A1'
                     pass
                 busId = busInfos['busId']
                 uavSocketService.emitUavInfos(True, busId)
@@ -235,18 +234,17 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
                 if busInfos is not None:
                     uavSocketService.emitUavInfos(False, busId)
                 # 在下車前一站告知要下車
-                while busInfos is None or busInfos['loc'] != 'A3' or busInfos['status'] != 'going to':
+                while busInfos is None or busInfos['loc'] != offBusStation or busInfos['status'] != 'going to':
                     setTerminal(terminalService, tello)
                     busInfos = uavSocketService.getBusInfosById(busId)
                     time.sleep(0.01)
                     pass
                 uavSocketService.emitUavInfos(True, busInfos['busId'])
                 # 等待到站
-                while busInfos is None or busInfos['loc'] != 'A3' or busInfos['status'] != 'arrive':
+                while busInfos is None or busInfos['loc'] != offBusStation or busInfos['status'] != 'arrive':
                     setTerminal(terminalService, tello)
                     busInfos = uavSocketService.getBusInfosById( busId )
                     time.sleep(0.01)
-                    FLIGHT_TARGET = 'A3'
                     pass
                 uavSocketService.emitUavInfos(False, busInfos['busId'])
 
@@ -256,8 +254,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
 
         elif afStateService.getState() == AutoFlightState.FLYING_MODE:
             # TODO: Function() -> Use to control the E2E aviation
-            filDestination = routeService.getDestination()
-            print( 'filDest',filDestination)
+            filDestination = routeService.getTargetPoint()
             destination = np.array([filDestination['x'], filDestination['y']])
             autoFlightController(tello, logger, terminalService, destination)
 
@@ -265,6 +262,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
             loggy.debug("State: Finding_aruco")
             FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
                                 frameSharedVar, terminalService)
+            continue
 
         elif afStateService.getState() == AutoFlightState.YAW_ALIGN:
             loggy.debug("State: yaw_alignment")

@@ -46,7 +46,6 @@ class UAVSocketService(object):
 
     def resetRoute(self, start_point, dest_point):
         self.sio.emit('resetRoute', {'start': start_point, 'dest': dest_point})
-        print( routes )
         return routes
 
     def disconnect(self):
