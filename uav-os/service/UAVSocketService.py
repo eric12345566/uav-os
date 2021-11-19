@@ -3,6 +3,7 @@ import socketio
 sio = socketio.Client()
 
 busInfosObj = None
+routes = None
 
 @sio.event
 def connect():
@@ -12,6 +13,12 @@ def connect():
 def busInfos( busInfos ):
     global busInfosObj
     busInfosObj = busInfos
+
+@sio.on('flightRoute')
+def getRoutes( routeResult ):
+    global routes
+    routes = routeResult
+    print('routeFromSocket',routeResult)
 
 class UAVSocketService(object):
     def __init__(self):
@@ -38,7 +45,9 @@ class UAVSocketService(object):
         pass
 
     def resetRoute(self, start_point, dest_point):
-        pass
+        self.sio.emit('resetRoute', {'start': start_point, 'dest': dest_point})
+        print( routes )
+        return routes
 
     def disconnect(self):
         self.sio.disconnect()

@@ -40,7 +40,7 @@ def positionConfirm(terminalService, tello):
     return maxPosition, maxRotateAngle
 
 
-def autoFlightController(tello, afStateService, logger, terminalService, destination):
+def autoFlightController(tello, logger, terminalService, destination):
     print("Get in Auto Flight")
     # tello.rotate_clockwise(235)
     source, currentRotateAngle = positionConfirm(terminalService, tello)
@@ -55,7 +55,6 @@ def autoFlightController(tello, afStateService, logger, terminalService, destina
     print(targetRotateAngle, targetDistance)
     print('------------------------------------------------------')
     rotateController(targetRotateAngle, currentRotateAngle, targetDistance, tello, v1)
-    afStateService.finding_aruco()
 
 
 def rotateController(targetRotateAngle, currentRotateAngle, targetDistance, tello, v1):

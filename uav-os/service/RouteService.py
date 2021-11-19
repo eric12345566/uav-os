@@ -8,6 +8,7 @@ class RouteService( object ):
         self.afStateService = autoFlightStateService
         self.uavSocketService = uavSocketService
 
+        self.afStateService.waitRoute()
         # Todo:
         '''
             1. 設定邏輯表, 讓 state 跳換符合 prototype
@@ -20,16 +21,18 @@ class RouteService( object ):
         self.routes = None
         self.routeList = []
         self.getOnBus = False
+        self.destination = None
 
         self.threading = None
 
-    # Todo: 在啟動 UAVOS 時、task type = oneWay 時調用
+    # Todo: 在啟動 UAVOS 時 或 task type = oneWay 時調用
     def initRoute(self, start_point):
         pass
 
-    # Todo: 從暫停暫停狀態回復時、task type = toAndFro 時調用
+    # Todo: 從暫停暫停狀態回復時 或 task type = toAndFro 時調用
     def resetRoute(self, start_point, dest_point):
-        pass
+        self.routes = self.uavSocketService.resetRoute( start_point, dest_point)
+        return self.routes
 
     def desideAFState(self):
         if self.afStateService.getState() == AutoFlightState.WAIT_COMMAND:
@@ -41,27 +44,37 @@ class RouteService( object ):
             pass
 
         elif self.afStateService.getState() == AutoFlightState.WAIT_ROUTE:
-            if( self.routes['onBus'] == True ):
+            while self.routes == None:
+                self.routes = self.resetRoute(2, 6)
+            if self.routes['onBus'] == True:
+                if self.getOnBus == False:
+                    self.routeList = self.routes['getOnRoutes']
+                else:
+                    self.routeList = self.routes['getOffRoutes']
                 self.afStateService.waitBusArrive()
-            elif( self.routes['onBus'] == False ):
+            elif self.routes['onBus'] == False:
+                self.routeList = self.routes['routes']
                 self.afStateService.readyTakeOff()
 
         elif self.afStateService.getState() == AutoFlightState.WAIT_BUS_ARRIVE:
             self.afStateService.readyTakeOff()
 
         elif self.afStateService.getState() == AutoFlightState.READY_TAKEOFF:
-            self.afStateService.autoflight()
+            if len(self.routeList) > 0:
+                self.destination = self.routeList.pop(0)
+            self.afStateService.autoFlight()
 
         elif self.afStateService.getState() == AutoFlightState.FLYING_MODE:
             # Todo: 若是 routes array.length != 0, 會繼續進到 flying mode
             if len( self.routeList ) > 0:
                 self.destination = self.routeList.pop(0)
-                self.afStateService.autoflight()
+                self.afStateService.autoFlight()
             else:
                 self.afStateService.finding_aruco()
 
         elif self.afStateService.getState() == AutoFlightState.FINDING_ARUCO:
-            self.afStateService.yaw_align()
+            # self.afStateService.yaw_align()
+            pass
 
         elif self.afStateService.getState() == AutoFlightState.YAW_ALIGN:
             self.afStateService.autoLanding()
@@ -77,7 +90,20 @@ class RouteService( object ):
                 3. 回到 wait route state ( 當 task type 是 "toAndFro" 時 )
                 4. 回到 wait bus arrive state ( route 還沒結束 ) --> 利用 "某參數" 判斷
             '''
+            if not self.getOnBus and self.routes['onBus'] == True:
+                self.afStateService.waitRoute()
+                self.getOnBus = True
+            elif self.getOnBus and self.routes['onBus'] == True:
+                self.afStateService.end()
+            elif self.routes['onBus'] == False:
+                self.afStateService.end()
             pass
+
+    def getOnBus(self):
+        return self.getOnBus
+
+    def getDestination(self):
+        return self.destination
 
     def setAtcCommand(self, atc_command):
         self.atc_command = atc_command
