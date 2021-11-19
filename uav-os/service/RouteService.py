@@ -3,6 +3,11 @@ from State.AutoFlightStateEnum import AutoFlightState
 
 from threading import Thread
 
+busStation = {
+    64: 'A1',
+    109: 'A3'
+}
+
 class RouteService( object ):
     def __init__(self, autoFlightStateService, uavSocketService):
         self.afStateService = autoFlightStateService
@@ -21,7 +26,10 @@ class RouteService( object ):
         self.routes = None
         self.routeList = []
         self.getOnBus = False
-        self.destination = None
+        self.targetPoint = None
+        self.targetPoint = None
+        self.onBusStation = None
+        self.offBusStation = None
 
         self.threading = None
 
@@ -46,9 +54,12 @@ class RouteService( object ):
         elif self.afStateService.getState() == AutoFlightState.WAIT_ROUTE:
             # Init Route
             while self.routes == None:
-                self.routes = self.resetRoute(2, 10)
+                self.routes = self.resetRoute(2, 126)
             # Update route list
             if self.routes['onBus'] == True:
+                self.onBusStation = self.routes['getOnStation']
+                self.offBusStation = self.routes['getOffStation']
+
                 if self.getOnBus == False:
                     self.routeList = self.routes['getOnRoutes']
                 else:
@@ -59,7 +70,7 @@ class RouteService( object ):
                 self.afStateService.readyTakeOff()
             # Init destination
             if len(self.routeList) > 0:
-                self.destination = self.routeList.pop(0)
+                self.targetPoint = self.routeList.pop(0)
 
         elif self.afStateService.getState() == AutoFlightState.WAIT_BUS_ARRIVE:
             self.afStateService.readyTakeOff()
@@ -70,7 +81,7 @@ class RouteService( object ):
         elif self.afStateService.getState() == AutoFlightState.FLYING_MODE:
             # Todo: 若是 routes array.length != 0, 會繼續進到 flying mode
             if len( self.routeList ) > 0:
-                self.destination = self.routeList.pop(0)
+                self.targetPoint = self.routeList.pop(0)
                 self.afStateService.autoFlight()
             else:
                 self.afStateService.finding_aruco()
@@ -104,11 +115,17 @@ class RouteService( object ):
                 self.afStateService.end()
             pass
 
-    def getOnBus(self):
+    def getOnBusStatus(self):
         return self.getOnBus
 
+    def getOnStation(self):
+        return busStation[ self.onBusStation ]
+
+    def getOffStation(self):
+        return busStation[ self.offBusStation ]
+
     def getDestination(self):
-        return self.destination
+        return self.targetPoint
 
     def setAtcCommand(self, atc_command):
         self.atc_command = atc_command
