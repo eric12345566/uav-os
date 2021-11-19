@@ -55,7 +55,7 @@ def flyALittle(tello, direction):
     time.sleep(1)
 
 
-def AutoLandingThirdController(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, afStateService, frameSharedVar, terminalService):
+def AutoLandingThirdController(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, frameSharedVar, terminalService):
     while True:
         # Update terminal value
         setTerminal(terminalService, tello)
@@ -124,7 +124,6 @@ def AutoLandingThirdController(tello, telloFrameBFR, matrix_coefficients, distor
                 if 20 <= now_height <= 30:
                     # 如果高度已經在 20 ~ 30 cm 之間，直接下降
                     tello.land()
-                    afStateService.landed()
                     break
                 else:
                     if now_height // 2 > 30:
@@ -136,7 +135,6 @@ def AutoLandingThirdController(tello, telloFrameBFR, matrix_coefficients, distor
                         move_down_cm = int(now_height - 30)
                         if move_down_cm < 20:
                             tello.land()
-                            afStateService.landed()
                             break
                         else:
                             # logger.afp_debug("move_down_cm: " + str(move_down_cm))

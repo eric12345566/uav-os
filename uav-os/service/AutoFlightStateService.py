@@ -59,3 +59,7 @@ class AutoFlightStateService(object):
     # Wait ATC command
     def waitCommand(self):
         self.State = AutoFlightState.WAIT_COMMAND
+
+    # Wait route from back-end
+    def waitRoute(self):
+        self.State = AutoFlightState.WAIT_ROUTE

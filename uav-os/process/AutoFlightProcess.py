@@ -26,6 +26,7 @@ from State.AutoFlightStateEnum import AutoFlightState
 # Service
 from service.LoggerService import LoggerService
 from service.AutoFlightStateService import AutoFlightStateService
+from service.RouteService import RouteService
 
 # Module
 from module.BackgroundFrameRead import BackgroundFrameRead
@@ -190,15 +191,15 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
     """ State
     """
     afStateService = AutoFlightStateService()
+    routeService = RouteService( afStateService, uavSocketService )
 
-    afStateService.waitBusArrive()
     onBus = False
-    # afStateService.readyTakeOff()
     # TODO: 把TestMode
     # TEST_MODE
     # afStateService.testMode()
 
     # Init busInfos (已知目的點)
+    routeService.resetRoute(2, 10)
     busInfos = uavSocketService.getBusInfosByLoc('A1')
     busId = ''
 
@@ -212,11 +213,13 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
         if terminalService.getForceLanding() == False and afStateService.getState() == AutoFlightState.FORCE_LANDING:
             afStateService.readyTakeOff()
 
+        if afStateService.getState() == AutoFlightState.WAIT_ROUTE:
+            pass
         # Auto Flight State Controller
         # 目前是A0駛往A1會起飛
         # LandingStatus 告訴公車目前狀態 True:可做動作 ; False:不可做動作
-        if afStateService.getState() == AutoFlightState.WAIT_BUS_ARRIVE:
-            if not onBus:  # 在基地等指令 車子往A1走時
+        elif afStateService.getState() == AutoFlightState.WAIT_BUS_ARRIVE:
+            if not routeService.getOnBus:  # 在基地等指令 車子往A1走時
                 while busInfos is None:
                     setTerminal(terminalService, tello)
                     busInfos = uavSocketService.getBusInfosByLoc('A1')
@@ -225,16 +228,18 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
                     pass
                 busId = busInfos['busId']
                 uavSocketService.emitUavInfos(True, busId)
-            elif onBus:  # 在車子上等指令 等待車子靠站
+            elif routeService.getOnBus:  # 在車子上等指令 等待車子靠站
                 busInfos = uavSocketService.getBusInfosById(busId)
                 if busInfos is not None:
                     uavSocketService.emitUavInfos(False, busId)
+                # 在下車前一站告知要下車
                 while busInfos is None or busInfos['loc'] != 'A3' or busInfos['status'] != 'going to':
                     setTerminal(terminalService, tello)
                     busInfos = uavSocketService.getBusInfosById(busId)
                     time.sleep(0.01)
                     pass
                 uavSocketService.emitUavInfos(True, busInfos['busId'])
+                # 等待到站
                 while busInfos is None or busInfos['loc'] != 'A3' or busInfos['status'] != 'arrive':
                     setTerminal(terminalService, tello)
                     busInfos = uavSocketService.getBusInfosById( busId )
@@ -242,19 +247,18 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
                     FLIGHT_TARGET = 'A3'
                     pass
                 uavSocketService.emitUavInfos(False, busInfos['busId'])
-            afStateService.readyTakeOff()
 
         elif afStateService.getState() == AutoFlightState.READY_TAKEOFF:
             # Take Off
             tello.takeoff()
-            # time.sleep(5)
-            # tello.move_forward(80)
-            # time.sleep(2)
 
-            # afStateService.autoLanding()
-            # afStateService.testMode()
-            afStateService.autoFlight()
-            # afStateService.finding_aruco()
+        elif afStateService.getState() == AutoFlightState.FLYING_MODE:
+            # TODO: Function() -> Use to control the E2E aviation
+            filDestination = routeService.getDestination()
+            print( 'filDest',filDestination)
+            destination = np.array([filDestination['x'], filDestination['y']])
+            autoFlightController(tello, logger, terminalService, destination)
+
         elif afStateService.getState() == AutoFlightState.FINDING_ARUCO:
             loggy.debug("State: Finding_aruco")
             FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
@@ -264,22 +268,17 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
             loggy.debug("State: yaw_alignment")
             YawAlignMultiArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
                                          frameSharedVar, terminalService)
-            afStateService.autoLanding()
         elif afStateService.getState() == AutoFlightState.AUTO_LANDING:
             # Landing procedure
             # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger, terminalService)
             # ArucoPIDLandingController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
             #                           frameSharedVar, terminalService)
-            AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+            AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1],
                                        frameSharedVar, terminalService)
         elif afStateService.getState() == AutoFlightState.LANDED:
             logger.afp_debug("State: Landed")
-            if not onBus:
-                afStateService.waitBusArrive()
-                onBus = True
-            elif onBus:
-                afStateService.end()
             pass
+
         elif afStateService.getState() == AutoFlightState.END:
             # temperObj = terminalService.getTemper()
             # plt.plot( temperObj['time'], temperObj['temperature'])
@@ -351,17 +350,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
                     afStateService.autoFlight()
                     print("SW to autoFlight")
                     break
-        elif afStateService.getState() == AutoFlightState.FLYING_MODE:
-            # TODO: Function() -> Use to control the E2E aviation
-            destination = ''
-            # 修改目標位置
-            if onBus:
-                destination = np.array([540, -240])
-            else:
-                destination = np.array([120, -120])
-            autoFlightController(tello, afStateService, logger, terminalService, destination)
-            pass
 
+        routeService.desideAFState()
     logger.afp_info("AutoFlightProcess End")
     # logger.afp_info("AutoFlightProcess End")
     loggy.debug("AutoFlightProcess End")
