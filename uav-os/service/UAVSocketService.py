@@ -4,6 +4,7 @@ sio = socketio.Client()
 
 busInfosObj = None
 routes = None
+taskInfos = None
 
 @sio.event
 def connect():
@@ -19,6 +20,12 @@ def getRoutes( routeResult ):
     global routes
     routes = routeResult
     print('routeFromSocket',routeResult)
+
+@sio.on('taskInfos')
+def getTask( task ):
+    global taskInfos
+    taskInfos = task
+    print( task )
 
 class UAVSocketService(object):
     def __init__(self):
@@ -47,6 +54,12 @@ class UAVSocketService(object):
     def resetRoute(self, start_point, dest_point):
         self.sio.emit('resetRoute', {'start': start_point, 'dest': dest_point})
         return routes
+
+    def initTask(self):
+        self.sio.emit( 'getTask' )
+
+    def getTask(self):
+        return taskInfos
 
     def disconnect(self):
         self.sio.disconnect()

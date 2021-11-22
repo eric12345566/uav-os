@@ -13,7 +13,8 @@ class RouteService( object ):
         self.afStateService = autoFlightStateService
         self.uavSocketService = uavSocketService
 
-        self.afStateService.waitRoute()
+        self.afStateService.waitCommand()
+
         # Todo:
         '''
             1. 設定邏輯表, 讓 state 跳換符合 prototype
@@ -22,7 +23,7 @@ class RouteService( object ):
             4. Set callback 來決定 state 對應的 controller 
         '''
         self.commandFromATC = None
-        self.atcList = []
+        self.taskInfos = None
         self.routes = None
         self.routeList = []
         self.getOnBus = False
@@ -32,8 +33,7 @@ class RouteService( object ):
         self.onBusStation = None
         self.offBusStation = None
         self.startPoint = 2
-        self.destPoint = 136
-
+        self.destPoint = None
 
         self.threading = None
 
@@ -52,6 +52,11 @@ class RouteService( object ):
             '''
                 等待從 ATC 拿到 task list 再動作
             '''
+            self.uavSocketService.initTask()
+            while self.taskInfos is None:
+                print( 'waiting for task')
+                self.taskInfos = self.uavSocketService.getTask()
+            self.destPoint = self.taskInfos[ 'destPoint' ]
             self.afStateService.waitRoute()
             pass
 
