@@ -13,7 +13,7 @@ from controller.YawAlignmentController import YawAlignmentController
 from controller.AutoLandingThirdController import AutoLandingThirdController
 from controller.YawAlignMultiArucoController import YawAlignMultiArucoController
 from controller.FindArucoController import FindArucoController
-from controller.ArucoPIDLandingController import ArucoPIDLandingController
+from controller.ArucoPosePIDAlignController import ArucoPosePIDAlignController
 
 # State
 from State.OSStateEnum import OSState
@@ -99,16 +99,33 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
         #            (0, 255, 0), 2, cv.LINE_AA)
 
         # For Angle Test
+        # cv.putText(frame, f"rvec: {frameSharedVar.rvec}", (20, 30),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1,
+        #            (0, 255, 0), 2, cv.LINE_AA)
+        # cv.putText(frame, f"tvec: {frameSharedVar.tvec}", (20, 70),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1,
+        #            (0, 255, 0), 2, cv.LINE_AA)
+        # cv.putText(frame, f"ids: {ids}", (20, 110),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1,
+        #            (0, 255, 0), 2, cv.LINE_AA)
+        # cv.putText(frame, f"RAngle: {RotateAngle}", (20, 150),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1,
+        #            (0, 255, 0), 2, cv.LINE_AA)
+
+        # For ArucoPosePID
         cv.putText(frame, f"rvec: {frameSharedVar.rvec}", (20, 30),
                    cv.FONT_HERSHEY_SIMPLEX, 1,
                    (0, 255, 0), 2, cv.LINE_AA)
         cv.putText(frame, f"tvec: {frameSharedVar.tvec}", (20, 70),
                    cv.FONT_HERSHEY_SIMPLEX, 1,
                    (0, 255, 0), 2, cv.LINE_AA)
-        cv.putText(frame, f"ids: {ids}", (20, 110),
+        cv.putText(frame, f"lrError: {frameSharedVar.lrError}, fbError: {frameSharedVar.fbError}", (20, 110),
                    cv.FONT_HERSHEY_SIMPLEX, 1,
                    (0, 255, 0), 2, cv.LINE_AA)
-        cv.putText(frame, f"RAngle: {RotateAngle}", (20, 150),
+        cv.putText(frame, f"lrPID: {frameSharedVar.lrPID}, fbPID: {frameSharedVar.fbPID}", (20, 150),
+                   cv.FONT_HERSHEY_SIMPLEX, 1,
+                   (0, 255, 0), 2, cv.LINE_AA)
+        cv.putText(frame, f"InMarker: {frameSharedVar.isFrameCenterInMarker}, height: {frameSharedVar.landHeight}", (20, 190),
                    cv.FONT_HERSHEY_SIMPLEX, 1,
                    (0, 255, 0), 2, cv.LINE_AA)
 
@@ -189,8 +206,11 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             # Take Off
             tello.takeoff()
             # afStateService.autoLanding()
-            # afStateService.testMode()
-            afStateService.finding_aruco()
+            # now_height = tello.get_distance_tof()
+            # move_down_cm = now_height - 40
+            # tello.move_down(move_down_cm)
+            afStateService.testMode()
+            # afStateService.finding_aruco()
         elif afStateService.getState() == AutoFlightState.FINDING_ARUCO:
             loggy.debug("State: Finding_aruco")
             FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
@@ -215,7 +235,6 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
         elif afStateService.getState() == AutoFlightState.END:
             pass
         elif afStateService.getState() == AutoFlightState.TEST_MODE:
-            loggy.info("State: Test_Mode")
             # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger)
             # tello.send_rc_control(0, 0, 0, 0)
             # TestSpeedController(tello, telloFrameBFR, cameraCalibArr[0],
@@ -231,9 +250,10 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
 
             # FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
             #                     frameSharedVar, terminalService)
-            YawAlignMultiArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
-                                         frameSharedVar, terminalService)
-            tello.land()
+            # YawAlignMultiArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+            #                              frameSharedVar, terminalService)
+            ArucoPosePIDAlignController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                        frameSharedVar, terminalService)
 
     # logger.afp_info("AutoFlightProcess End")
     loggy.debug("AutoFlightProcess End")
