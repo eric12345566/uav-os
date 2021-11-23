@@ -61,16 +61,16 @@ def ArucoPosePIDAlignController(tello, telloFrameBFR, matrix_coefficients, disto
         frameSharedVar.landHeight = now_height
 
         if now_height <= 50:
-            dynamicP = 0.5
-            dynamicI = 0.005
+            dynamicP = 0.4
+            dynamicI = 0.001
             dynamicD = 0.4
 
             xErrorLand = 3
             yErrorLand = 3
         else:
             dynamicP = 0.3
-            dynamicI = 0.001
-            dynamicD = 0.4
+            dynamicI = 0.003
+            dynamicD = 0.7
 
             xErrorLand = 5
             yErrorLand = 5
@@ -143,10 +143,11 @@ def ArucoPosePIDAlignController(tello, telloFrameBFR, matrix_coefficients, disto
                     for_back_velocity = 0
                     left_right_velocity = 0
             else:
-                loggy.debug("Pose 不能用")
+                loggy.debug("tvec爆炸不能用")
         else:
             # 否則，回到 FindArucoController 嘗試盲找降落點
-            loggy.debug("Not seen marker")
+            # TODO: 數秒數，太久就自己回來（PID 好像會自己拉回來）
+            loggy.debug("Not seen aruco marker marker")
 
         # 將 isFrameCenterInMarker 分享給 FrameWorker
         frameSharedVar.isFrameCenterInMarker = isFrameCenterInMarker
