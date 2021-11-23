@@ -1,5 +1,7 @@
 import socketio
+from Loggy import Loggy
 
+loggy = Loggy("SOCKET")
 sio = socketio.Client()
 
 busInfosObj = None
@@ -8,7 +10,7 @@ taskInfos = None
 
 @sio.event
 def connect():
-    print("I'm connected!")
+    loggy.info( "I'm connected!" )
 
 @sio.on('busInfos')
 def busInfos( busInfos ):
@@ -19,13 +21,13 @@ def busInfos( busInfos ):
 def getRoutes( routeResult ):
     global routes
     routes = routeResult
-    print('routeFromSocket',routeResult)
+    loggy.debug('routeFromSocket',routeResult)
 
 @sio.on('taskInfos')
 def getTask( task ):
     global taskInfos
     taskInfos = task
-    print( task )
+    loggy.debug( 'taskInfos', task )
 
 class UAVSocketService(object):
     def __init__(self):
@@ -60,6 +62,21 @@ class UAVSocketService(object):
 
     def getTask(self):
         return taskInfos
+
+    def updateTaskStatus(self, status, progress):
+        print('updateTaskStatus')
+        self.sio.emit( 'updateTaskStatus', { 'status': status, 'progress': progress } )
+
+    def clearUavTask(self):
+        self.sio.emit( 'clearUavTask' )
+
+    def clearAllSocketInfos(self):
+        global busInfosObj
+        global routes
+        global taskInfos
+        busInfosObj = None
+        routes = None
+        taskInfos = None
 
     def disconnect(self):
         self.sio.disconnect()

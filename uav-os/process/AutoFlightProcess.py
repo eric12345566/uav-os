@@ -191,7 +191,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
     """ State
     """
     afStateService = AutoFlightStateService()
-    routeService = RouteService( afStateService, uavSocketService )
+    routeService = RouteService( afStateService, uavSocketService, terminalService )
 
     onBus = False
     # TODO: 把TestMode
@@ -199,9 +199,6 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
     # afStateService.testMode()
 
     # Init busInfos (已知目的點)
-    startPoint = routeService.getStartPoint()
-    destPoint = routeService.getDestPoint()
-    # routeService.resetRoute( startPoint, destPoint )
     busId = ''
 
     """ Main 主程式
@@ -218,6 +215,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
         # 目前是A0駛往A1會起飛
         # LandingStatus 告訴公車目前狀態 True:可做動作 ; False:不可做動作
         elif afStateService.getState() == AutoFlightState.WAIT_BUS_ARRIVE:
+            loggy.info('wait bus arrive')
             onBusStation = routeService.getOnStation()
             offBusStation = routeService.getOffStation()
             busInfos = uavSocketService.getBusInfosByLoc( onBusStation )
@@ -284,6 +282,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
             # plt.plot( temperObj['time'], temperObj['temperature'])
             # plt.show()
             logger.afp_info("AFP End")
+        elif afStateService.getState() == AutoFlightState.POWER_OFF:
+            logger.afp_info("Baterry less than 15, Power Off")
             break
         elif afStateService.getState() == AutoFlightState.TEST_MODE:
             loggy.info("State: Test_Mode")
