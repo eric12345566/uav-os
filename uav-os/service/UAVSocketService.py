@@ -64,7 +64,6 @@ class UAVSocketService(object):
         return taskInfos
 
     def updateTaskStatus(self, status, progress):
-        print('updateTaskStatus')
         self.sio.emit( 'updateTaskStatus', { 'status': status, 'progress': progress } )
 
     def clearUavTask(self):

@@ -254,7 +254,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
             # TODO: Function() -> Use to control the E2E aviation
             filDestination = routeService.getTargetPoint()
             destination = np.array([filDestination['x'], filDestination['y']])
-            autoFlightController(tello, logger, terminalService, destination)
+            autoFlightController(tello, afStateService, logger, terminalService, destination)
 
         elif afStateService.getState() == AutoFlightState.FINDING_ARUCO:
             loggy.debug("State: Finding_aruco")
