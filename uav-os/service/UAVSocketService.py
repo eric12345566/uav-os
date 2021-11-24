@@ -69,6 +69,9 @@ class UAVSocketService(object):
     def clearUavTask(self):
         self.sio.emit( 'clearUavTask' )
 
+    def clearUavInfos(self):
+        self.sio.emit( 'clearUavInfos' )
+
     def clearAllSocketInfos(self):
         global busInfosObj
         global routes

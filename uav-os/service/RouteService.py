@@ -17,7 +17,6 @@ class RouteService( object ):
         self.uavSocketService = uavSocketService
         self.terminalService = terminalService
 
-        self.uavSocketService.initTask()
         self.afStateService.waitCommand()
 
         # Todo:
@@ -56,11 +55,15 @@ class RouteService( object ):
         return self.routes
 
     def desideAFState(self):
+        # 更新狀態
+        self.uavSocketService.updateTaskStatus(self.taskStatus, self.taskProgress)
+
         if self.afStateService.getState() == AutoFlightState.WAIT_COMMAND:
             '''
                 等待從 ATC 拿到 task list 再動作
             '''
             loggy.info( 'waiting for task' )
+            self.uavSocketService.initTask()
             while self.taskInfos is None:
                 self.taskInfos = self.uavSocketService.getTask()
             self.destPoint = self.taskInfos[ 'destPoint' ]
@@ -149,10 +152,12 @@ class RouteService( object ):
             if self.taskInfos['type'] == 'oneWay':
                 self.taskStatus = 'finish'
                 self.startPoint = self.destPoint
+                # 更新狀態
+                self.uavSocketService.updateTaskStatus(self.taskStatus, self.taskProgress)
                 # 清空資訊
                 self.taskInfos = None
                 self.uavSocketService.clearUavTask()
-                self.uavSocketService.initTask()
+                self.uavSocketService.clearUavInfos()
 
             elif self.taskInfos['type'] == 'toAndFro':
                 self.taskInfos[ 'destPoint' ] = self.startPoint
@@ -162,10 +167,12 @@ class RouteService( object ):
 
             self.routes = None
             self.routeList = []
+            self.taskStatus = 'onGoing'
+            self.taskProgress = 0
             self.uavSocketService.clearAllSocketInfos()
             # 回到等待 task
             self.afStateService.waitCommand()
-        self.uavSocketService.updateTaskStatus(self.taskStatus, self.taskProgress)
+
         if self.terminalService.getInfo( 'battery' ) <= 15:
             self.afStateService.powerOff()
 
