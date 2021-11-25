@@ -128,6 +128,9 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
         cv.putText(frame, f"InMarker: {frameSharedVar.isFrameCenterInMarker}, height: {frameSharedVar.landHeight}", (20, 190),
                    cv.FONT_HERSHEY_SIMPLEX, 1,
                    (0, 255, 0), 2, cv.LINE_AA)
+        cv.putText(frame, f"RAngle: {RotateAngle}", (20, 230),
+                   cv.FONT_HERSHEY_SIMPLEX, 1,
+                   (0, 255, 0), 2, cv.LINE_AA)
 
         # Send frame to FrameProcess
         FrameService.setFrame(frame)
@@ -254,6 +257,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService):
             #                              frameSharedVar, terminalService)
             ArucoPosePIDAlignController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
                                         frameSharedVar, terminalService)
+            # tello.send_rc_control(0, 0, 0, 0)
 
     # logger.afp_info("AutoFlightProcess End")
     loggy.debug("AutoFlightProcess End")
