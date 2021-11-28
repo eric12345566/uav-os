@@ -98,6 +98,13 @@ class RouteService( object ):
             self.afStateService.readyTakeOff()
 
         elif self.afStateService.getState() == AutoFlightState.READY_TAKEOFF:
+            print('route', self.routes)
+            print('route2', self.routes['onBus'])
+            # 更新 task 完成度
+            if self.routes['onBus'] == True:
+                self.taskProgress += self.progressCount
+            elif self.routes['onBus'] == False:
+                self.taskProgress += self.progressCount
             self.afStateService.autoFlight()
 
         elif self.afStateService.getState() == AutoFlightState.FLYING_MODE:

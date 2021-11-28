@@ -56,7 +56,6 @@ def autoFlightController(tello, afStateService, logger, terminalService, destina
     print(targetRotateAngle, targetDistance)
     print('------------------------------------------------------')
     rotateController(targetRotateAngle, currentRotateAngle, targetDistance, tello, v1)
-    afStateService.finding_aruco()
 
 
 def rotateController(targetRotateAngle, currentRotateAngle, targetDistance, tello, v1):

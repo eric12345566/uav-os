@@ -18,6 +18,7 @@ from controller.AutoLandingThirdController import AutoLandingThirdController
 from controller.YawAlignMultiArucoController import YawAlignMultiArucoController
 from controller.FindArucoController import FindArucoController
 from controller.ArucoPIDLandingController import ArucoPIDLandingController
+from controller.terminalController import terminalController
 
 # State
 from State.OSStateEnum import OSState
@@ -142,8 +143,10 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
     tello = Tello()
     tello.connect()
 
-    # Init terminal value
+    # Init terminal
     setTerminal(terminalService, tello)
+    terminalCtrl = Thread(target=terminalController, args=(terminalService, uavSocketService,), daemon=True)
+    terminalCtrl.start()
 
     # Tello Info
     loggy.info("Battery: ", tello.get_battery())
@@ -247,6 +250,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
                 uavSocketService.emitUavInfos(False, busInfos['busId'])
 
         elif afStateService.getState() == AutoFlightState.READY_TAKEOFF:
+            loggy.info('ready takeoff')
             # Take Off
             tello.takeoff()
 
@@ -359,8 +363,9 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
     # Stop indoorLocationWorker
     indoorLocationWorker.join()
 
-    # Stop frameSendWorker
+    # Stop threading
     frameSendWorker.join()
+    terminalCtrl.join()
 
     #                       _oo0oo_
     #                      o8888888o

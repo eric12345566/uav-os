@@ -66,6 +66,9 @@ class UAVSocketService(object):
     def updateTaskStatus(self, status, progress):
         self.sio.emit( 'updateTaskStatus', { 'status': status, 'progress': progress } )
 
+    def updateUavBodyCondition(self, battery, location, height ):
+        self.sio.emit( 'updateUavBodyCondition', { 'battery': battery, 'location': location, 'height': height } )
+
     def clearUavTask(self):
         self.sio.emit( 'clearUavTask' )
 
