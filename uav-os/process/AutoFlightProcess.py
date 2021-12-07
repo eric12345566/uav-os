@@ -377,7 +377,6 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
     # logger.afp_info("AutoFlightProcess End")
     logger.afp_info("AutoFlightProcess End")
     loggy.debug("AutoFlightProcess End")
-                    terminalService.setKeyboardTrigger(False)
 
     # Stop indoorLocationWorker
     indoorLocationWorker.join()
