@@ -52,7 +52,7 @@ def flyALittle(tello, direction):
     # 0.6, 3
     time.sleep(0.4)
     tello.send_rc_control(0, 0, 0, 0)
-    time.sleep(1)
+    time.sleep(0.8)
 
 
 def AutoLandingThirdController(tello, telloFrameBFR, matrix_coefficients, distortion_coefficients, frameSharedVar, terminalService):
@@ -70,7 +70,7 @@ def AutoLandingThirdController(tello, telloFrameBFR, matrix_coefficients, distor
             # 隨高度調整與 Aruco Marker 降落距離的值
             now_height = tello.get_distance_tof()
 
-            if now_height >= 90:
+            if now_height >= 80:
                 xErrorLimit = 5
                 yErrorLimit = 5
             else:
@@ -115,7 +115,7 @@ def AutoLandingThirdController(tello, telloFrameBFR, matrix_coefficients, distor
             else:
                 # 已經到降落狀態，執行降落
                 tello.send_rc_control(0, 0, 0, 0)
-                time.sleep(1.5)
+                time.sleep(0.5)
 
                 now_height = tello.get_distance_tof()
                 # logger.afp_debug("now_height: " + str(now_height))

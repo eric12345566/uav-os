@@ -19,6 +19,7 @@ from controller.YawAlignMultiArucoController import YawAlignMultiArucoController
 from controller.FindArucoController import FindArucoController
 from controller.ArucoPIDLandingController import ArucoPIDLandingController
 from controller.terminalController import terminalController
+from controller.ArucoPosePIDAlignController import ArucoPosePIDAlignController
 
 # State
 from State.OSStateEnum import OSState
@@ -112,16 +113,36 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
         #            (0, 255, 0), 2, cv.LINE_AA)
 
         # For Angle Test
+        # cv.putText(frame, f"rvec: {frameSharedVar.rvec}", (20, 30),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1,
+        #            (0, 255, 0), 2, cv.LINE_AA)
+        # cv.putText(frame, f"tvec: {frameSharedVar.tvec}", (20, 70),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1,
+        #            (0, 255, 0), 2, cv.LINE_AA)
+        # cv.putText(frame, f"ids: {ids}", (20, 110),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1,
+        #            (0, 255, 0), 2, cv.LINE_AA)
+        # cv.putText(frame, f"RAngle: {RotateAngle}", (20, 150),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1,
+        #            (0, 255, 0), 2, cv.LINE_AA)
+
+        # For ArucoPosePID
         cv.putText(frame, f"rvec: {frameSharedVar.rvec}", (20, 30),
                    cv.FONT_HERSHEY_SIMPLEX, 1,
                    (0, 255, 0), 2, cv.LINE_AA)
         cv.putText(frame, f"tvec: {frameSharedVar.tvec}", (20, 70),
                    cv.FONT_HERSHEY_SIMPLEX, 1,
                    (0, 255, 0), 2, cv.LINE_AA)
-        cv.putText(frame, f"ids: {ids}", (20, 110),
+        cv.putText(frame, f"lrError: {frameSharedVar.lrError}, fbError: {frameSharedVar.fbError}", (20, 110),
                    cv.FONT_HERSHEY_SIMPLEX, 1,
                    (0, 255, 0), 2, cv.LINE_AA)
-        cv.putText(frame, f"RAngel: {RotateAngle}", (20, 150),
+        cv.putText(frame, f"lrPID: {frameSharedVar.lrPID}, fbPID: {frameSharedVar.fbPID}", (20, 150),
+                   cv.FONT_HERSHEY_SIMPLEX, 1,
+                   (0, 255, 0), 2, cv.LINE_AA)
+        cv.putText(frame, f"InMarker: {frameSharedVar.isFrameCenterInMarker}, height: {frameSharedVar.landHeight}", (20, 190),
+                   cv.FONT_HERSHEY_SIMPLEX, 1,
+                   (0, 255, 0), 2, cv.LINE_AA)
+        cv.putText(frame, f"RAngle: {RotateAngle}", (20, 230),
                    cv.FONT_HERSHEY_SIMPLEX, 1,
                    (0, 255, 0), 2, cv.LINE_AA)
 
@@ -303,15 +324,13 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
             # AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
             #                            frameSharedVar, terminalService)
 
-            tello.send_rc_control(0, 0, 0, 0)
-            print('-------------------Position--------------------')
-            print(str(indoorLocationSharedVar.getLocation()))
-            # print(str(indoorLocationShared.x_location), str(indoorLocationShared.y_location), str(indoorLocationShared.direction))
-            pass
-            RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar,
-                     terminalService)
-            print("State!!!")
-            print(afStateService.getState())
+            # FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+            #                     frameSharedVar, terminalService)
+            # YawAlignMultiArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+            #                              frameSharedVar, terminalService)
+            ArucoPosePIDAlignController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                        frameSharedVar, terminalService)
+            # tello.send_rc_control(0, 0, 0, 0)
         elif afStateService.getState() == AutoFlightState.KEYBOARD_CONTROL:
             while True:
 
@@ -319,25 +338,25 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
                 setTerminal(terminalService, tello)
                 print("In State")
                 if keyboard.read_key() == "p":
-                    print("You pressed p")
                     tello.move_up(20)
+                    print("You pressed p")
                 if keyboard.read_key() == "o":
                     print("You pressed o")
                     tello.move_down(20)
                 if keyboard.read_key() == "w":
                     print("You pressed w")
                     tello.move_forward(20)
-                if keyboard.read_key() == "s":
                     print("You pressed s")
+                if keyboard.read_key() == "s":
                     tello.move_back(20)
                 if keyboard.read_key() == "a":
-                    print("You pressed a")
                     tello.move_left(20)
+                    print("You pressed a")
                 if keyboard.read_key() == "d":
                     print("You pressed d")
                     tello.move_right(20)
-                if keyboard.read_key() == "l":
                     print("You pressed l")
+                if keyboard.read_key() == "l":
                     tello.rotate_clockwise(30)
                 if keyboard.read_key() == "k":
                     print("You pressed k")
@@ -349,16 +368,16 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
                     print("SW to Test")
                     break
                 if keyboard.read_key() == "z":
-                    print("You pressed z")
-                    terminalService.setKeyboardTrigger(False)
                     afStateService.autoFlight()
+                    print("You pressed z")
                     print("SW to autoFlight")
                     break
 
         routeService.desideAFState()
-    logger.afp_info("AutoFlightProcess End")
     # logger.afp_info("AutoFlightProcess End")
+    logger.afp_info("AutoFlightProcess End")
     loggy.debug("AutoFlightProcess End")
+                    terminalService.setKeyboardTrigger(False)
 
     # Stop indoorLocationWorker
     indoorLocationWorker.join()
