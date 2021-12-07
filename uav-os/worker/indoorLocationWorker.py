@@ -94,6 +94,7 @@ def indoorLocationWorker(telloFrameBFR, indoorLocationShared, terminalService, t
             terminalService.setInfo('rotate', rotateAngle)
             terminalService.setInfo('position_X', indoorLocationShared.x_location)
             terminalService.setInfo('position_Y', indoorLocationShared.y_location)
+            terminalService.setInfo('qrPosition', qrPosition)
 
         # print(indoorLocationShared.direction)
 

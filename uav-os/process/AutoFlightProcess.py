@@ -18,6 +18,7 @@ from controller.AutoLandingThirdController import AutoLandingThirdController
 from controller.YawAlignMultiArucoController import YawAlignMultiArucoController
 from controller.FindArucoController import FindArucoController
 from controller.ArucoPIDLandingController import ArucoPIDLandingController
+from controller.terminalController import terminalController
 
 # State
 from State.OSStateEnum import OSState
@@ -142,8 +143,10 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
     tello = Tello()
     tello.connect()
 
-    # Init terminal value
+    # Init terminal
     setTerminal(terminalService, tello)
+    terminalCtrl = Thread(target=terminalController, args=(terminalService, uavSocketService,), daemon=True)
+    terminalCtrl.start()
 
     # Tello Info
     loggy.info("Battery: ", tello.get_battery())
@@ -191,7 +194,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
     """ State
     """
     afStateService = AutoFlightStateService()
-    routeService = RouteService( afStateService, uavSocketService )
+    routeService = RouteService( afStateService, uavSocketService, terminalService )
 
     onBus = False
     # TODO: 把TestMode
@@ -199,9 +202,6 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
     # afStateService.testMode()
 
     # Init busInfos (已知目的點)
-    startPoint = routeService.getStartPoint()
-    destPoint = routeService.getDestPoint()
-    routeService.resetRoute( startPoint, destPoint )
     busId = ''
 
     """ Main 主程式
@@ -218,6 +218,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
         # 目前是A0駛往A1會起飛
         # LandingStatus 告訴公車目前狀態 True:可做動作 ; False:不可做動作
         elif afStateService.getState() == AutoFlightState.WAIT_BUS_ARRIVE:
+            loggy.info('wait bus arrive')
             onBusStation = routeService.getOnStation()
             offBusStation = routeService.getOffStation()
             busInfos = uavSocketService.getBusInfosByLoc( onBusStation )
@@ -249,6 +250,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
                 uavSocketService.emitUavInfos(False, busInfos['busId'])
 
         elif afStateService.getState() == AutoFlightState.READY_TAKEOFF:
+            loggy.info('ready takeoff')
             # Take Off
             tello.takeoff()
 
@@ -256,7 +258,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
             # TODO: Function() -> Use to control the E2E aviation
             filDestination = routeService.getTargetPoint()
             destination = np.array([filDestination['x'], filDestination['y']])
-            autoFlightController(tello, logger, terminalService, destination)
+            autoFlightController(tello, afStateService, logger, terminalService, destination)
 
         elif afStateService.getState() == AutoFlightState.FINDING_ARUCO:
             loggy.debug("State: Finding_aruco")
@@ -284,6 +286,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
             # plt.plot( temperObj['time'], temperObj['temperature'])
             # plt.show()
             logger.afp_info("AFP End")
+        elif afStateService.getState() == AutoFlightState.POWER_OFF:
+            logger.afp_info("Baterry less than 15, Power Off")
             break
         elif afStateService.getState() == AutoFlightState.TEST_MODE:
             loggy.info("State: Test_Mode")
@@ -359,8 +363,9 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
     # Stop indoorLocationWorker
     indoorLocationWorker.join()
 
-    # Stop frameSendWorker
+    # Stop threading
     frameSendWorker.join()
+    terminalCtrl.join()
 
     #                       _oo0oo_
     #                      o8888888o

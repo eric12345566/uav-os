@@ -3,6 +3,7 @@ import keyboard
 from module.terminalModule import setTerminal
 import numpy as np
 import math
+import json
 from worker.indoorLocationWorker import transferLocationID
 
 
@@ -40,7 +41,7 @@ def positionConfirm(terminalService, tello):
     return maxPosition, maxRotateAngle
 
 
-def autoFlightController(tello, logger, terminalService, destination):
+def autoFlightController(tello, afStateService, logger, terminalService, destination):
     print("Get in Auto Flight")
     # tello.rotate_clockwise(235)
     source, currentRotateAngle = positionConfirm(terminalService, tello)
@@ -58,7 +59,7 @@ def autoFlightController(tello, logger, terminalService, destination):
 
 
 def rotateController(targetRotateAngle, currentRotateAngle, targetDistance, tello, v1):
-    neededRotateAngle = targetRotateAngle - (360 - currentRotateAngle)
+    neededRotateAngle = targetRotateAngle - currentRotateAngle
     print("----------旋轉角度----------")
     print(str(neededRotateAngle))
     if neededRotateAngle > 0:
@@ -67,28 +68,18 @@ def rotateController(targetRotateAngle, currentRotateAngle, targetDistance, tell
         neededRotateAngle = neededRotateAngle + 360
     time.sleep(0.5)
     try:
-        if v1[0] >= 0:
-            tello.rotate_clockwise(neededRotateAngle)
-        else:
-            tello.rotate_counter_clockwise(neededRotateAngle)
+        tello.rotate_clockwise(neededRotateAngle)
+        # if v1[0] >= 0:
+        #
+        # else:
+        #     tello.rotate_counter_clockwise(neededRotateAngle)
     except:
         rotateController(targetRotateAngle, currentRotateAngle, targetDistance, tello, v1)
     # 判斷方位
     time.sleep(2)
-    tello.move_forward(targetDistance)
+    tello.move_forward(int(targetDistance))
     time.sleep(2)
-
-    # while True:
-    #     setTerminal(terminalService, tello)
-    #     x = terminalService.getInfo('position_X')
-    #     y = terminalService.getInfo('position_Y')
-
-    # if (x, y) == (70, 70):
-    #     print("Reach Destination")
-    #     tello.move_forward(20)
-    #     afStateService.finding_aruco()
-    #     break
-    # time.sleep(0.2)
+    # tello.move_forward(int(targetDistance / 2))
 
 
 # Parameter
@@ -109,12 +100,29 @@ def AngleCalculateForRoute(source, destination):
     print("V1:" + str(v1))
     print("\n\n\n\n\n\n\n")
 
+
     cosine_angle = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
     angle = np.arccos(cosine_angle) * 180 / np.pi
+    if v1[0] < 0:
+        angle =  360 - angle
     print(angle)
     move_distance = distance(v1)
     print(move_distance)
     return round(angle), move_distance, v1
+
+
+def toDoubleQuotation(routeDataStr):
+    routeStr = str(routeDataStr)
+    routeStr = routeStr.replace('\'', "\"")
+    return routeStr
+
+
+def flightRouteParse(routeData):
+    routeData = toDoubleQuotation(routeData)
+    decodedData = json.loads(routeData)
+    getOnStation = decodedData["getOnStation"]
+    getOffStation = decodedData["getOffStation"]
+    pass
 
 # TODO: 給予點對點算出角度
 # print(AngleCalculateForRoute(np.array([240, 120]), np.array([30, 30])))

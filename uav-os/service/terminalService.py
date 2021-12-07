@@ -19,6 +19,7 @@ class terminalService(object):
         self.position_rotate = 0
         self.position_x = 0
         self.position_y = 0
+        self.qrPosition = -1
         self.tello_high = 0
 
         # Plot settings
@@ -70,6 +71,9 @@ class terminalService(object):
             self.position_x = value
         elif key == 'position_Y':
             self.position_y = value
+        elif key == 'qrPosition':
+            if value != -1:
+                self.qrPosition = value
         elif key == 'high':
             self.tello_high = value
 
@@ -96,6 +100,8 @@ class terminalService(object):
             return self.position_x
         elif key == 'position_Y':
             return self.position_y
+        elif key == 'qrPosition':
+            return self.qrPosition
         elif key == 'high':
             return self.tello_high
         return 0
