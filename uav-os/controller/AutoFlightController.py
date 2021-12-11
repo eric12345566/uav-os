@@ -53,7 +53,8 @@ def autoFlightController(tello, afStateService, logger, terminalService, destina
     # 計算角度與距離
 
     targetRotateAngle, targetDistance, v1 = AngleCalculateForRoute(source, destination)
-    print(targetRotateAngle, targetDistance)
+    print('currentRotateAngle, targetTotate, targetDistance')
+    print(currentRotateAngle , targetRotateAngle, targetDistance)
     print('------------------------------------------------------')
     rotateController(targetRotateAngle, currentRotateAngle, targetDistance, tello, v1)
 

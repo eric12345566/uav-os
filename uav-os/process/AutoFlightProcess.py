@@ -250,25 +250,25 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
                     time.sleep(0.01)
                     pass
                 busId = busInfos['busId']
-                uavSocketService.emitUavInfos(True, busId)
+                uavSocketService.emitUavInfos(True, busId, True)
             elif routeService.getOnBus:  # 在車子上等指令 等待車子靠站
                 busInfos = uavSocketService.getBusInfosById(busId)
                 if busInfos is not None:
-                    uavSocketService.emitUavInfos(False, busId)
+                    uavSocketService.emitUavInfos(False, busId, True)
                 # 在下車前一站告知要下車
                 while busInfos is None or busInfos['loc'] != offBusStation or busInfos['status'] != 'going to':
                     setTerminal(terminalService, tello)
                     busInfos = uavSocketService.getBusInfosById(busId)
                     time.sleep(0.01)
                     pass
-                uavSocketService.emitUavInfos(True, busInfos['busId'])
+                uavSocketService.emitUavInfos(True, busInfos['busId'], True)
                 # 等待到站
                 while busInfos is None or busInfos['loc'] != offBusStation or busInfos['status'] != 'arrive':
                     setTerminal(terminalService, tello)
                     busInfos = uavSocketService.getBusInfosById( busId )
                     time.sleep(0.01)
                     pass
-                uavSocketService.emitUavInfos(False, busInfos['busId'])
+                uavSocketService.emitUavInfos(False, busInfos['busId'], False)
 
         elif afStateService.getState() == AutoFlightState.READY_TAKEOFF:
             loggy.info('ready takeoff')

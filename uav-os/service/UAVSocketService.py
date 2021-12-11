@@ -39,8 +39,8 @@ class UAVSocketService(object):
         if( self.sio.sid is not None ):
             sio.emit('uavConnect', 'Uav-123')
 
-    def emitUavInfos(self, stopBus, busId):
-        sio.emit('updateUav', {'stopBus': stopBus, 'busId': busId})
+    def emitUavInfos(self, stopBus, busId, getOnStatus):
+        sio.emit('updateUav', {'stopBus': stopBus, 'busId': busId, 'getOnStatus': getOnStatus})
 
     def getBusInfosByLoc(self, loc):
         self.sio.emit('drivingBusInfosByLoc', loc)
