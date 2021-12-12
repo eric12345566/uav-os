@@ -35,7 +35,7 @@ class UAVSocketService(object):
         self.sio = sio
 
     def runSocket(self):
-        self.sio.connect('http://127.0.0.1:4000')
+        self.sio.connect('http://140.134.39.52:4000')
         if( self.sio.sid is not None ):
             sio.emit('uavConnect', 'Uav-123')
 
