@@ -169,7 +169,7 @@ def ArucoPosePIDAlignController(tello, telloFrameBFR, matrix_coefficients, disto
                 if 20 <= now_height <= 30:
                     # 如果高度已經在 20 ~ 30 cm 之間，直接下降
                     tello.land()
-                    afStateService.landed()
+                    # afStateService.landed()
                     break
                 else:
                     if now_height // 2 > 30:
@@ -181,7 +181,7 @@ def ArucoPosePIDAlignController(tello, telloFrameBFR, matrix_coefficients, disto
                         move_down_cm = int(now_height - 30)
                         if move_down_cm < 20:
                             tello.land()
-                            afStateService.landed()
+                            # afStateService.landed()
                             break
                         else:
                             # logger.afp_debug("move_down_cm: " + str(move_down_cm))

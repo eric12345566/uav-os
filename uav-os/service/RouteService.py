@@ -40,7 +40,7 @@ class RouteService( object ):
 
         self.onBusStation = None
         self.offBusStation = None
-        self.startPoint = 26
+        self.startPoint = 2
         self.destPoint = None
 
         self.threading = None

@@ -296,8 +296,10 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
             # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger, terminalService)
             # ArucoPIDLandingController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
             #                           frameSharedVar, terminalService)
-            AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1],
-                                       frameSharedVar, terminalService)
+            # AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1],
+            #                            frameSharedVar, terminalService)
+            ArucoPosePIDAlignController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                        frameSharedVar, terminalService)
         elif afStateService.getState() == AutoFlightState.LANDED:
             logger.afp_debug("State: Landed")
             pass
