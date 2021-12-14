@@ -168,6 +168,7 @@ class RouteService( object ):
                 self.taskInfos[ 'destPoint' ] = self.startPoint
                 self.startPoint = self.destPoint
                 # 將回程設成 oneWay
+                self.getOnBus = False
                 self.taskInfos['type'] = 'oneWay'
 
             self.routes = None
