@@ -25,9 +25,9 @@ def ArucoPosePIDAlignController(tello, telloFrameBFR, matrix_coefficients, disto
     yErrorLand = 3
 
     # plotter
-    pidPlot = Plotter(400, 200, sample_buffer=200)
+    # pidPlot = Plotter(400, 200, sample_buffer=200)
 
-    loggy.debug("pidPlot ready")
+    # loggy.debug("pidPlot ready")
 
     left_right_velocity = 0
     for_back_velocity = 0
@@ -107,8 +107,8 @@ def ArucoPosePIDAlignController(tello, telloFrameBFR, matrix_coefficients, disto
                 frameSharedVar.setFbPID(for_back_velocity)
 
                 # Plot 輸出
-                pidPlot.plot(left_right_velocity, label="lrPID")
-                pidPlot.plot(for_back_velocity, label="fbPID")
+                # pidPlot.plot(left_right_velocity, label="lrPID")
+                # pidPlot.plot(for_back_velocity, label="fbPID")
 
                 # TODO: 檢查是否達到降落條件
                 if abs(xError) < xErrorLand and abs(yError) < yErrorLand:

@@ -7,7 +7,7 @@ from Loggy import Loggy
 
 loggy = Loggy("ROUTE")
 busStation = {
-    64: 'A1',
+    81: 'A1',
     109: 'A3'
 }
 
