@@ -37,7 +37,7 @@ class UAVSocketService(object):
     def runSocket(self):
         self.sio.connect('http://140.134.39.52:4000')
         if( self.sio.sid is not None ):
-            sio.emit('uavConnect', 'Uav-123')
+            sio.emit('uavConnect', 'Uav-001')
 
     def emitUavInfos(self, stopBus, busId, getOnStatus):
         sio.emit('updateUav', {'stopBus': stopBus, 'busId': busId, 'getOnStatus': getOnStatus})
