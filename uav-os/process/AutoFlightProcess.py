@@ -18,6 +18,8 @@ from controller.AutoLandingThirdController import AutoLandingThirdController
 from controller.YawAlignMultiArucoController import YawAlignMultiArucoController
 from controller.FindArucoController import FindArucoController
 from controller.ArucoPIDLandingController import ArucoPIDLandingController
+from controller.terminalController import terminalController
+from controller.ArucoPosePIDAlignController import ArucoPosePIDAlignController
 
 # State
 from State.OSStateEnum import OSState
@@ -111,16 +113,36 @@ def backgroundSendFrame(FrameService, telloFrameBFR, cameraCalibArr, frameShared
         #            (0, 255, 0), 2, cv.LINE_AA)
 
         # For Angle Test
+        # cv.putText(frame, f"rvec: {frameSharedVar.rvec}", (20, 30),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1,
+        #            (0, 255, 0), 2, cv.LINE_AA)
+        # cv.putText(frame, f"tvec: {frameSharedVar.tvec}", (20, 70),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1,
+        #            (0, 255, 0), 2, cv.LINE_AA)
+        # cv.putText(frame, f"ids: {ids}", (20, 110),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1,
+        #            (0, 255, 0), 2, cv.LINE_AA)
+        # cv.putText(frame, f"RAngle: {RotateAngle}", (20, 150),
+        #            cv.FONT_HERSHEY_SIMPLEX, 1,
+        #            (0, 255, 0), 2, cv.LINE_AA)
+
+        # For ArucoPosePID
         cv.putText(frame, f"rvec: {frameSharedVar.rvec}", (20, 30),
                    cv.FONT_HERSHEY_SIMPLEX, 1,
                    (0, 255, 0), 2, cv.LINE_AA)
         cv.putText(frame, f"tvec: {frameSharedVar.tvec}", (20, 70),
                    cv.FONT_HERSHEY_SIMPLEX, 1,
                    (0, 255, 0), 2, cv.LINE_AA)
-        cv.putText(frame, f"ids: {ids}", (20, 110),
+        cv.putText(frame, f"lrError: {frameSharedVar.lrError}, fbError: {frameSharedVar.fbError}", (20, 110),
                    cv.FONT_HERSHEY_SIMPLEX, 1,
                    (0, 255, 0), 2, cv.LINE_AA)
-        cv.putText(frame, f"RAngel: {RotateAngle}", (20, 150),
+        cv.putText(frame, f"lrPID: {frameSharedVar.lrPID}, fbPID: {frameSharedVar.fbPID}", (20, 150),
+                   cv.FONT_HERSHEY_SIMPLEX, 1,
+                   (0, 255, 0), 2, cv.LINE_AA)
+        cv.putText(frame, f"InMarker: {frameSharedVar.isFrameCenterInMarker}, height: {frameSharedVar.landHeight}", (20, 190),
+                   cv.FONT_HERSHEY_SIMPLEX, 1,
+                   (0, 255, 0), 2, cv.LINE_AA)
+        cv.putText(frame, f"RAngle: {RotateAngle}", (20, 230),
                    cv.FONT_HERSHEY_SIMPLEX, 1,
                    (0, 255, 0), 2, cv.LINE_AA)
 
@@ -142,8 +164,10 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
     tello = Tello()
     tello.connect()
 
-    # Init terminal value
+    # Init terminal
     setTerminal(terminalService, tello)
+    terminalCtrl = Thread(target=terminalController, args=(terminalService, uavSocketService,), daemon=True)
+    terminalCtrl.start()
 
     # Tello Info
     loggy.info("Battery: ", tello.get_battery())
@@ -191,7 +215,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
     """ State
     """
     afStateService = AutoFlightStateService()
-    routeService = RouteService( afStateService, uavSocketService )
+    routeService = RouteService( afStateService, uavSocketService, terminalService )
 
     onBus = False
     # TODO: 把TestMode
@@ -199,9 +223,6 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
     # afStateService.testMode()
 
     # Init busInfos (已知目的點)
-    startPoint = routeService.getStartPoint()
-    destPoint = routeService.getDestPoint()
-    routeService.resetRoute( startPoint, destPoint )
     busId = ''
 
     """ Main 主程式
@@ -218,6 +239,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
         # 目前是A0駛往A1會起飛
         # LandingStatus 告訴公車目前狀態 True:可做動作 ; False:不可做動作
         elif afStateService.getState() == AutoFlightState.WAIT_BUS_ARRIVE:
+            loggy.info('wait bus arrive')
             onBusStation = routeService.getOnStation()
             offBusStation = routeService.getOffStation()
             busInfos = uavSocketService.getBusInfosByLoc( onBusStation )
@@ -228,27 +250,28 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
                     time.sleep(0.01)
                     pass
                 busId = busInfos['busId']
-                uavSocketService.emitUavInfos(True, busId)
+                uavSocketService.emitUavInfos(True, busId, True)
             elif routeService.getOnBus:  # 在車子上等指令 等待車子靠站
                 busInfos = uavSocketService.getBusInfosById(busId)
                 if busInfos is not None:
-                    uavSocketService.emitUavInfos(False, busId)
+                    uavSocketService.emitUavInfos(False, busId, True)
                 # 在下車前一站告知要下車
                 while busInfos is None or busInfos['loc'] != offBusStation or busInfos['status'] != 'going to':
                     setTerminal(terminalService, tello)
                     busInfos = uavSocketService.getBusInfosById(busId)
                     time.sleep(0.01)
                     pass
-                uavSocketService.emitUavInfos(True, busInfos['busId'])
+                uavSocketService.emitUavInfos(True, busInfos['busId'], True)
                 # 等待到站
                 while busInfos is None or busInfos['loc'] != offBusStation or busInfos['status'] != 'arrive':
                     setTerminal(terminalService, tello)
                     busInfos = uavSocketService.getBusInfosById( busId )
                     time.sleep(0.01)
                     pass
-                uavSocketService.emitUavInfos(False, busInfos['busId'])
+                uavSocketService.emitUavInfos(False, busInfos['busId'], False)
 
         elif afStateService.getState() == AutoFlightState.READY_TAKEOFF:
+            loggy.info('ready takeoff')
             # Take Off
             tello.takeoff()
 
@@ -256,7 +279,7 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
             # TODO: Function() -> Use to control the E2E aviation
             filDestination = routeService.getTargetPoint()
             destination = np.array([filDestination['x'], filDestination['y']])
-            autoFlightController(tello, logger, terminalService, destination)
+            autoFlightController(tello, afStateService, logger, terminalService, destination)
 
         elif afStateService.getState() == AutoFlightState.FINDING_ARUCO:
             loggy.debug("State: Finding_aruco")
@@ -273,8 +296,10 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
             # autoLandingController(tello, telloFrameBFR, afStateService, frameSharedVar, logger, terminalService)
             # ArucoPIDLandingController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
             #                           frameSharedVar, terminalService)
-            AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1],
-                                       frameSharedVar, terminalService)
+            # AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1],
+            #                            frameSharedVar, terminalService)
+            ArucoPosePIDAlignController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                        frameSharedVar, terminalService)
         elif afStateService.getState() == AutoFlightState.LANDED:
             logger.afp_debug("State: Landed")
             pass
@@ -284,6 +309,8 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
             # plt.plot( temperObj['time'], temperObj['temperature'])
             # plt.show()
             logger.afp_info("AFP End")
+        elif afStateService.getState() == AutoFlightState.POWER_OFF:
+            logger.afp_info("Baterry less than 15, Power Off")
             break
         elif afStateService.getState() == AutoFlightState.TEST_MODE:
             loggy.info("State: Test_Mode")
@@ -299,15 +326,13 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
             # AutoLandingThirdController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
             #                            frameSharedVar, terminalService)
 
-            tello.send_rc_control(0, 0, 0, 0)
-            print('-------------------Position--------------------')
-            print(str(indoorLocationSharedVar.getLocation()))
-            # print(str(indoorLocationShared.x_location), str(indoorLocationShared.y_location), str(indoorLocationShared.direction))
-            pass
-            RvecTest(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService, frameSharedVar,
-                     terminalService)
-            print("State!!!")
-            print(afStateService.getState())
+            # FindArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+            #                     frameSharedVar, terminalService)
+            # YawAlignMultiArucoController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+            #                              frameSharedVar, terminalService)
+            ArucoPosePIDAlignController(tello, telloFrameBFR, cameraCalibArr[0], cameraCalibArr[1], afStateService,
+                                        frameSharedVar, terminalService)
+            # tello.send_rc_control(0, 0, 0, 0)
         elif afStateService.getState() == AutoFlightState.KEYBOARD_CONTROL:
             while True:
 
@@ -315,25 +340,25 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
                 setTerminal(terminalService, tello)
                 print("In State")
                 if keyboard.read_key() == "p":
-                    print("You pressed p")
                     tello.move_up(20)
+                    print("You pressed p")
                 if keyboard.read_key() == "o":
                     print("You pressed o")
                     tello.move_down(20)
                 if keyboard.read_key() == "w":
                     print("You pressed w")
                     tello.move_forward(20)
-                if keyboard.read_key() == "s":
                     print("You pressed s")
+                if keyboard.read_key() == "s":
                     tello.move_back(20)
                 if keyboard.read_key() == "a":
-                    print("You pressed a")
                     tello.move_left(20)
+                    print("You pressed a")
                 if keyboard.read_key() == "d":
                     print("You pressed d")
                     tello.move_right(20)
-                if keyboard.read_key() == "l":
                     print("You pressed l")
+                if keyboard.read_key() == "l":
                     tello.rotate_clockwise(30)
                 if keyboard.read_key() == "k":
                     print("You pressed k")
@@ -345,22 +370,22 @@ def AutoFlightProcess(FrameService, OSStateService, terminalService, uavSocketSe
                     print("SW to Test")
                     break
                 if keyboard.read_key() == "z":
-                    print("You pressed z")
-                    terminalService.setKeyboardTrigger(False)
                     afStateService.autoFlight()
+                    print("You pressed z")
                     print("SW to autoFlight")
                     break
 
         routeService.desideAFState()
-    logger.afp_info("AutoFlightProcess End")
     # logger.afp_info("AutoFlightProcess End")
+    logger.afp_info("AutoFlightProcess End")
     loggy.debug("AutoFlightProcess End")
 
     # Stop indoorLocationWorker
     indoorLocationWorker.join()
 
-    # Stop frameSendWorker
+    # Stop threading
     frameSendWorker.join()
+    terminalCtrl.join()
 
     #                       _oo0oo_
     #                      o8888888o

@@ -63,3 +63,7 @@ class AutoFlightStateService(object):
     # Wait route from back-end
     def waitRoute(self):
         self.State = AutoFlightState.WAIT_ROUTE
+
+    # Uav-os in power-off mode
+    def powerOff(self):
+        self.State = AutoFlightState.POWER_OFF

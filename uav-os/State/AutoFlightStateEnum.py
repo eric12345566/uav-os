@@ -14,6 +14,7 @@ class AutoFlightState(Enum):
     WAIT_ROUTE = "wait_route"
 
     END = "end"
+    POWER_OFF = "power_off"
 
     # TEST MODE
     TEST_MODE = "test_mode"
