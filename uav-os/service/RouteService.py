@@ -2,18 +2,23 @@
 from State.AutoFlightStateEnum import AutoFlightState
 
 from threading import Thread
+import time
+from Loggy import Loggy
 
+loggy = Loggy("ROUTE")
 busStation = {
     64: 'A1',
     109: 'A3'
 }
 
 class RouteService( object ):
-    def __init__(self, autoFlightStateService, uavSocketService):
+    def __init__(self, autoFlightStateService, uavSocketService, terminalService):
         self.afStateService = autoFlightStateService
         self.uavSocketService = uavSocketService
+        self.terminalService = terminalService
 
-        self.afStateService.waitRoute()
+        self.afStateService.waitCommand()
+
         # Todo:
         '''
             1. 設定邏輯表, 讓 state 跳換符合 prototype
@@ -22,7 +27,11 @@ class RouteService( object ):
             4. Set callback 來決定 state 對應的 controller 
         '''
         self.commandFromATC = None
-        self.atcList = []
+        self.taskInfos = None
+        self.taskProgress = 0
+        self.progressCount = 0
+        self.taskStatus = 'onGoing'
+
         self.routes = None
         self.routeList = []
         self.getOnBus = False
@@ -32,8 +41,7 @@ class RouteService( object ):
         self.onBusStation = None
         self.offBusStation = None
         self.startPoint = 2
-        self.destPoint = 136
-
+        self.destPoint = None
 
         self.threading = None
 
@@ -47,11 +55,18 @@ class RouteService( object ):
         return self.routes
 
     def desideAFState(self):
+        # 更新狀態
+        self.uavSocketService.updateTaskStatus(self.taskStatus, self.taskProgress)
+
         if self.afStateService.getState() == AutoFlightState.WAIT_COMMAND:
-            # Todo
             '''
                 等待從 ATC 拿到 task list 再動作
             '''
+            loggy.info( 'waiting for task' )
+            self.uavSocketService.initTask()
+            while self.taskInfos is None:
+                self.taskInfos = self.uavSocketService.getTask()
+            self.destPoint = self.taskInfos[ 'destPoint' ]
             self.afStateService.waitRoute()
             pass
 
@@ -59,6 +74,7 @@ class RouteService( object ):
             # Init Route
             while self.routes == None:
                 self.routes = self.resetRoute( self.startPoint, self.destPoint )
+                time.sleep(0.01)
             # Update route list
             if self.routes['onBus'] == True:
                 self.onBusStation = self.routes['getOnStation']
@@ -68,9 +84,11 @@ class RouteService( object ):
                     self.routeList = self.routes['getOnRoutes']
                 else:
                     self.routeList = self.routes['getOffRoutes']
+                self.progressCount = 20 / len( self.routeList )
                 self.afStateService.waitBusArrive()
             elif self.routes['onBus'] == False:
                 self.routeList = self.routes['routes']
+                self.progressCount = 50 / len(self.routeList)
                 self.afStateService.readyTakeOff()
             # Init destination
             if len(self.routeList) > 0:
@@ -80,6 +98,11 @@ class RouteService( object ):
             self.afStateService.readyTakeOff()
 
         elif self.afStateService.getState() == AutoFlightState.READY_TAKEOFF:
+            # 更新 task 完成度
+            if self.routes['onBus'] == True:
+                self.taskProgress += self.progressCount
+            elif self.routes['onBus'] == False:
+                self.taskProgress += self.progressCount
             self.afStateService.autoFlight()
 
         elif self.afStateService.getState() == AutoFlightState.FLYING_MODE:
@@ -87,6 +110,11 @@ class RouteService( object ):
             if len( self.routeList ) > 0:
                 self.targetPoint = self.routeList.pop(0)
                 self.afStateService.autoFlight()
+                # 更新 task 完成度
+                if self.routes['onBus'] == True:
+                    self.taskProgress += self.progressCount
+                elif self.routes['onBus'] == False:
+                    self.taskProgress += self.progressCount
             else:
                 self.afStateService.finding_aruco()
 
@@ -112,12 +140,47 @@ class RouteService( object ):
             if not self.getOnBus and self.routes['onBus'] == True:
                 self.afStateService.waitRoute()
                 self.getOnBus = True
+
+                self.taskProgress = 50
             elif self.getOnBus and self.routes['onBus'] == True:
                 self.getOnBus = False
                 self.afStateService.end()
+
+                self.taskProgress = 100
             elif self.routes['onBus'] == False:
                 self.afStateService.end()
-            pass
+
+                self.taskProgress = 100
+            time.sleep(0.3)
+
+        elif self.afStateService.getState() == AutoFlightState.END:
+            if self.taskInfos['type'] == 'oneWay':
+                self.taskStatus = 'finish'
+                self.startPoint = self.destPoint
+                # 更新狀態
+                self.uavSocketService.updateTaskStatus(self.taskStatus, self.taskProgress)
+                # 清空資訊
+                self.taskInfos = None
+                self.uavSocketService.clearUavTask()
+                self.uavSocketService.clearUavInfos()
+
+            elif self.taskInfos['type'] == 'toAndFro':
+                self.taskInfos[ 'destPoint' ] = self.startPoint
+                self.startPoint = self.destPoint
+                # 將回程設成 oneWay
+                self.getOnBus = False
+                self.taskInfos['type'] = 'oneWay'
+
+            self.routes = None
+            self.routeList = []
+            self.taskStatus = 'onGoing'
+            self.taskProgress = 0
+            self.uavSocketService.clearAllSocketInfos()
+            # 回到等待 task
+            self.afStateService.waitCommand()
+
+        if self.terminalService.getInfo( 'battery' ) <= 15:
+            self.afStateService.powerOff()
 
     def getOnBusStatus(self):
         return self.getOnBus

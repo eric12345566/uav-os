@@ -44,6 +44,39 @@ def arucoTrackPostEstimate(matrix_coefficients, distortion_coefficients, frame):
     return centerX, centerY, rvec, tvec, ids
 
 
+def arucoPoseCoordinate(telloFrameBFR, matrix_coefficients, distortion_coefficients, frameSharedVar):
+    # Process frame
+    frame = telloFrameBFR.frame
+    frame = cv2.flip(frame, 1)
+    frameHeight, frameWidth, _ = frame.shape
+
+    # Get Post Estimation from Aruco Marker
+    centerX, centerY, rvec, tvec, haveMarker = arucoMarkerSelectPoseEstimate(0, matrix_coefficients, distortion_coefficients, frame)
+    frameSharedVar.rvec = rvec
+    frameSharedVar.tvec = tvec
+
+    if haveMarker:
+        # 有看到 aruco marker
+        # 輸出整數值的 Error
+        xError = tvec[0][0][0] * 100
+        yError = tvec[0][0][1] * 100
+        hError = tvec[0][0][2] * 100
+
+        # 檢查有沒有數值爆炸，如果有就回傳不能用
+        if abs(xError) <= 200.0 and abs(yError) <= 200.0:
+            isMarkerCanUse = True
+        else:
+            isMarkerCanUse = False
+    else:
+        # 沒看到 aruco marker
+        xError = 0
+        yError = 0
+        hError = 0
+        isMarkerCanUse = False
+
+    return xError, yError, hError, haveMarker, isMarkerCanUse
+
+
 def arucoMarkerSelectPoseEstimate(selectID, matrix_coefficients, distortion_coefficients, frame):
     centerX = 0
     centerY = 0

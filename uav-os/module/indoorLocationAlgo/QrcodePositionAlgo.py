@@ -312,7 +312,7 @@ def QrcodeEstimate(frame):
     cv2.circle(oriImage, (int(middlePoint[0]), int(middlePoint[1])), 30, (0, 255, 255), 3)
     # print(middlePoint[0], rightVertex, bottomVertex, middlePoint)
 
-    return rotateAngle, oriImage
+    return 360 - rotateAngle, oriImage
     # return oriImage
     # Mask才是影像二階之後
     # cv2.imshow('Result', oriImage)
