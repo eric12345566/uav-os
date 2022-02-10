@@ -6,6 +6,7 @@ class CmdEnum(Enum):
     move_back = 'move_back'
     move_left = 'move_left'
     move_right = 'move_right'
+    move_down = 'move_down'
     move_up = 'move_up'
     land = 'land'
     takeoff = 'takeoff'

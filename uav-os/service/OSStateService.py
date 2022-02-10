@@ -36,16 +36,24 @@ class OSStateService(object):
         return self.State
 
     def isOSInitReady(self):
-        if self.__controllerInitReady and self.__frameInitReady and self.__autoFlightInitReady:
+        # Deprecated: 拋棄 Controller Process
+        # if self.__controllerInitReady and self.__frameInitReady and self.__autoFlightInitReady:
+        #     self.setState(OSState.READY)
+        # else:
+        #     self.setState(OSState.INITIALIZING)
+
+        if self.__frameInitReady and self.__autoFlightInitReady:
             self.setState(OSState.READY)
         else:
             self.setState(OSState.INITIALIZING)
 
     def controllerInitReady(self):
+        # Deprecated: 拋棄 Controller Process
         self.__controllerInitReady = True
         self.isOSInitReady()
 
     def getControllerInitState(self):
+        # Deprecated: 拋棄 Controller Process
         return self.__controllerInitReady
 
     def frameInitReady(self):

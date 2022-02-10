@@ -21,6 +21,10 @@ class FlightCmdService(object):
         self.__uavInfoValue = None
         self.__getInfoReturnFlightState = None
 
+        # AFP and CTR done state
+        self.afp_is_done = False
+        self.ctr_is_done = False
+
     """
         Utility function
     """
@@ -39,6 +43,11 @@ class FlightCmdService(object):
         # 初始化成功，轉換到下一個狀態
 
         self.__setstate__(FlightState.READY_FOR_CMD)
+
+    def readyInit(self):
+        # 重設所有變數原本的變數
+        self.ctr_is_done = False
+        self.afp_is_done = False
 
     def registerInputCmdProcess(self, processID) -> bool:
         # Process 註冊 Service，切換到 INPUT_CMD 狀態，其他人無法使用
@@ -96,7 +105,20 @@ class FlightCmdService(object):
         self.__setstate__(FlightState.DONE)
 
     def controller_StateBackToReady(self):
-        self.__setstate__(FlightState.READY_FOR_CMD)
+        self.ctr_is_done = True
+
+        if self.ctr_is_done and self.afp_is_done:
+            self.__setstate__(FlightState.READY_FOR_CMD)
+
+        # Clear
+        self.__registerProcess = ""
+        self.__cmdList.clear()
+
+    def afp_StateBackToReady(self):
+        self.afp_is_done = True
+
+        if self.afp_is_done and self.ctr_is_done:
+            self.__setstate__(FlightState.READY_FOR_CMD)
 
         # Clear
         self.__registerProcess = ""
